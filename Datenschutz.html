@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CasaFin — Datenschutz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;550;600;650;700;750;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --font-ui:"Hanken Grotesk",-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --bg:#F4F4EF; --surface:#FFFFFF; --surface2:#F6F6F1;
+  --ink:#14161A; --ink2:#565B63; --ink3:#8B9098; --line:#E4E4DC; --line2:#D7D8CE;
+  --brand:#0B8F92; --brand2:#0A7479; --brand-ink:#075257; --brand-soft:#E0F1F1; --brand-glow:rgba(11,143,146,.18);
+  --r-sm:12px; --r-md:16px; --r-lg:22px; --pill:999px;
+  --shadow-md:0 4px 16px rgba(20,22,26,.07),0 1px 3px rgba(20,22,26,.05);
+  --maxw:760px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.6;overflow-x:hidden}
+a{color:var(--brand);text-decoration:none}
+a:hover{text-decoration:underline}
+img{max-width:100%;display:block}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+.mono{font-family:var(--font-mono)}
+[data-lang="de"] .en-only{display:none}
+[data-lang="en"] .de-only{display:none}
+
+/* nav */
+.nav{position:sticky;top:0;z-index:50;background:rgba(244,244,239,.85);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+.nav-in{display:flex;align-items:center;gap:14px;height:64px;max-width:980px;margin:0 auto;padding:0 24px}
+.brand{display:flex;align-items:center;gap:10px}
+.mark{width:34px;height:34px;border-radius:10px;background:#0e1315;display:grid;place-items:center;overflow:hidden}
+.mark img{width:100%;height:100%;object-fit:cover}
+.bname{font-weight:750;font-size:17px;letter-spacing:-.02em}
+.bname b{color:var(--brand)}
+.nav-r{margin-left:auto;display:flex;align-items:center;gap:10px}
+.seg{display:inline-flex;background:var(--surface2);border:1px solid var(--line);border-radius:var(--pill);padding:3px}
+.seg button{padding:5px 11px;border-radius:var(--pill);font-size:12.5px;font-weight:650;color:var(--ink3);border:none;background:none;cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-md)}
+.back{font-size:14px;font-weight:600;color:var(--ink2);display:inline-flex;align-items:center;gap:6px}
+.back svg{width:16px;height:16px}
+
+/* doc */
+.doc{padding:48px 0 80px}
+.eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--brand-ink)}
+h1{font-size:40px;font-weight:780;letter-spacing:-.03em;line-height:1.08;margin:12px 0 10px}
+.updated{font-size:13px;color:var(--ink3);font-family:var(--font-mono)}
+.lead{font-size:17px;color:var(--ink2);margin:22px 0 8px;max-width:60ch}
+.note{display:flex;gap:13px;background:var(--brand-soft);border:1px solid color-mix(in oklab,var(--brand),transparent 65%);border-radius:var(--r-md);padding:16px 18px;margin:28px 0;font-size:14.5px;color:var(--brand-ink)}
+.note svg{width:20px;height:20px;color:var(--brand);flex-shrink:0;margin-top:2px}
+h2{font-size:22px;font-weight:740;letter-spacing:-.02em;margin:38px 0 12px;scroll-margin-top:80px}
+h2 .num{font-family:var(--font-mono);font-size:14px;color:var(--brand);margin-right:8px}
+p{font-size:15.5px;color:var(--ink2);margin:0 0 12px;max-width:62ch}
+ul{margin:0 0 14px 0;padding-left:0;list-style:none;display:grid;gap:8px}
+li{display:flex;gap:10px;font-size:15px;color:var(--ink2);max-width:60ch}
+li svg{width:17px;height:17px;color:var(--brand);flex-shrink:0;margin-top:3px}
+strong{color:var(--ink);font-weight:700}
+.contact{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:24px;margin-top:36px}
+.contact b{font-size:15px;font-weight:700;color:var(--ink)}
+.contact p{margin:6px 0 0}
+hr{border:none;border-top:1px solid var(--line);margin:48px 0}
+footer{padding:32px 0;border-top:1px solid var(--line);color:var(--ink3);font-size:12.5px}
+footer .wrap{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+@media(max-width:560px){
+  h1{font-size:30px}
+  .doc{padding:32px 0 60px}
+}
+</style>
+</head>
+<body data-lang="de">
+
+<header class="nav"><div class="nav-in">
+  <a class="brand" href="index.html">
+    <div class="mark"><img src="assets/casafin-icon.png" alt="CasaFin" /></div>
+    <div class="bname">Casa<b>Fin</b></div>
+  </a>
+  <div class="nav-r">
+    <a class="back" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span data-de="Zurück" data-en="Back"></span></a>
+    <div class="seg"><button data-set="de" class="on">DE</button><button data-set="en">EN</button></div>
+  </div>
+</div></header>
+
+<main class="doc"><div class="wrap">
+  <span class="eyebrow" data-de="Rechtliches" data-en="Legal"></span>
+  <h1 data-de="Datenschutz" data-en="Privacy"></h1>
+  <p class="updated">Stand / Last updated: 18.06.2026 · Boppart Digital, Zürich (CH)</p>
+
+  <p class="lead" data-de="Wir halten es kurz und ehrlich: CasaFin ist so gebaut, dass wir deine Finanzdaten gar nicht erst sehen." data-en="We keep it short and honest: CasaFin is built so we never get to see your financial data in the first place."></p>
+
+  <div class="note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l7.5 3v6c0 4.6-3.2 8.4-7.5 10-4.3-1.6-7.5-5.4-7.5-10v-6z"/><path d="M9 12l2 2 4-4"/></svg>
+    <span data-de="<strong>Aktueller Stand (Demo / Beta):</strong> Deine Eingaben werden ausschliesslich lokal in deinem Browser verschlüsselt gespeichert. Sie werden nicht an unsere Server übertragen. Lädst du die Seite auf einem anderen Gerät, sind die Daten nicht vorhanden." data-en="<strong>Current status (demo / beta):</strong> Your entries are stored encrypted locally in your browser only. They are not transmitted to our servers. Open the site on another device and the data won't be there."></span>
+  </div>
+
+  <h2><span class="num">01</span><span data-de="Welche Daten wir verarbeiten" data-en="What data we process"></span></h2>
+  <p data-de="In der aktuellen Demo-/Beta-Phase verarbeiten wir keine personenbezogenen Finanzdaten auf unseren Servern. Konkret:" data-en="In the current demo/beta phase we do not process any personal financial data on our servers. Specifically:"></p>
+  <ul>
+    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4.5 4.5L19 7"/></svg><span data-de="<strong>Finanzdaten</strong> (Konten, Rechnungen, Belege) bleiben verschlüsselt auf deinem Gerät." data-en="<strong>Financial data</strong> (accounts, bills, receipts) stays encrypted on your device."></span></li>
+    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4.5 4.5L19 7"/></svg><span data-de="<strong>Kein Konto, kein Login</strong> in der Demo — wir speichern keine E-Mail, kein Passwort bei uns." data-en="<strong>No account, no login</strong> in the demo — we store no email or password on our side."></span></li>
+    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4.5 4.5L19 7"/></svg><span data-de="<strong>Hosting:</strong> Die Webseite wird über einen Hosting-Anbieter ausgeliefert, der technisch bedingt Server-Logs (z. B. IP-Adresse) führen kann." data-en="<strong>Hosting:</strong> The website is served via a hosting provider that may keep technical server logs (e.g. IP address)."></span></li>
+    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4.5 4.5L19 7"/></svg><span data-de="<strong>Zahlung:</strong> Käufe laufen über Stripe. Zahlungsdaten verarbeitet Stripe direkt — wir sehen keine Kartendaten." data-en="<strong>Payment:</strong> Purchases run through Stripe. Stripe processes payment data directly — we never see card details."></span></li>
+  </ul>
+
+  <h2><span class="num">02</span><span data-de="Verschlüsselung & Zero-Knowledge" data-en="Encryption & zero-knowledge"></span></h2>
+  <p data-de="CasaFin verschlüsselt deine Daten direkt in deinem Browser (AES-256, Web Crypto). Der Schlüssel wird aus deinem Master-Passwort abgeleitet und verlässt dein Gerät nie. Wir können deine Daten technisch nicht entschlüsseln. Wichtig: Vergisst du dein Master-Passwort, können auch wir es nicht wiederherstellen." data-en="CasaFin encrypts your data directly in your browser (AES-256, Web Crypto). The key is derived from your master password and never leaves your device. We technically cannot decrypt your data. Important: if you forget your master password, we cannot recover it either."></p>
+
+  <h2><span class="num">03</span><span data-de="Schweizer Server (geplant)" data-en="Swiss servers (planned)"></span></h2>
+  <p data-de="Für den späteren produktiven Betrieb mit Cloud-Sync ist Hosting in der Schweiz bzw. der EU geplant. Solange das nicht aktiv ist, machen wir dazu keine Versprechen — deine Daten liegen heute auf deinem Gerät." data-en="For later production use with cloud sync, hosting in Switzerland or the EU is planned. Until that is live, we make no promises about it — today your data sits on your device."></p>
+
+  <h2><span class="num">04</span><span data-de="Deine Rechte" data-en="Your rights"></span></h2>
+  <p data-de="Nach Schweizer DSG (und DSGVO, falls anwendbar) hast du Recht auf Auskunft, Berichtigung und Löschung. In der Demo löschst du alle Daten jederzeit selbst über Einstellungen → Demo-Daten leeren oder indem du die Browser-Daten dieser Seite löschst." data-en="Under the Swiss FADP (and GDPR where applicable) you have the right to access, correct and delete your data. In the demo you can delete all data yourself at any time via Settings → Clear demo data, or by clearing this site's browser data."></p>
+
+  <hr />
+
+  <h2 id="agb"><span class="num">05</span><span data-de="Nutzungsbedingungen (Kurzfassung)" data-en="Terms of use (short version)"></span></h2>
+  <p data-de="CasaFin wird in der aktuellen Phase als Demo/Beta „wie besehen“ bereitgestellt, ohne Garantie für Verfügbarkeit oder Fehlerfreiheit. Die Inhalte (z. B. Steuerhinweise) dienen der Information und sind keine Rechts-, Steuer- oder Finanzberatung. Pioneer-Käufe gewähren den beschriebenen Zugang gemäss Angebot zum Kaufzeitpunkt." data-en="In its current phase CasaFin is provided as a demo/beta ‘as is’, without warranty of availability or correctness. Content (e.g. tax hints) is for information only and is not legal, tax or financial advice. Pioneer purchases grant the access described in the offer at the time of purchase."></p>
+
+  <div class="contact">
+    <b data-de="Verantwortlich & Kontakt" data-en="Controller & contact"></b>
+    <p>Boppart Digital · Zürich · Schweiz</p>
+    <p><a href="mailto:hello@casafin.ch">hello@casafin.ch</a></p>
+  </div>
+</div></main>
+
+<footer><div class="wrap">
+  <span class="mono">© 2026 Boppart Digital · Zürich · CH</span>
+  <a href="index.html" data-de="Zurück zur Startseite" data-en="Back to home"></a>
+</div></footer>
+
+<script>
+(function(){
+  var body=document.body;
+  function apply(lang){
+    body.setAttribute('data-lang',lang);
+    document.documentElement.lang=lang;
+    document.querySelectorAll('[data-de]').forEach(function(el){
+      var v=el.getAttribute('data-'+lang); if(v!=null) el.innerHTML=v;
+    });
+    document.querySelectorAll('.seg button').forEach(function(b){ b.classList.toggle('on', b.dataset.set===lang); });
+  }
+  document.querySelectorAll('.seg button').forEach(function(b){ b.addEventListener('click',function(){ apply(b.dataset.set); }); });
+  apply('de');
+})();
+</script>
+</body>
+</html>
