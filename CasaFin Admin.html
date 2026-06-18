@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CasaFin — Admin Cockpit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;550;600;650;700;750;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --font-ui:"Hanken Grotesk",-apple-system,sans-serif;--font-mono:"JetBrains Mono",monospace;
+  --bg:#0A0C0F;--surface:#14171C;--surface2:#1A1E24;--surface3:#20252C;
+  --ink:#F1F3F1;--ink2:#A4AAB2;--ink3:#6A7079;--line:#262B32;--line2:#323841;
+  --brand:#1FB6B3;--brand2:#2ACAC4;--brand-soft:rgba(31,182,179,.14);--brand-ink:#64D8D2;
+  --gold:#D6AC55;--gold-soft:rgba(214,172,85,.14);--neg:#E2705E;--neg-soft:rgba(226,112,94,.14);--pos:#1FB6B3;
+  --r:16px;--r-sm:11px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5}
+.num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}.mono{font-family:var(--font-mono)}
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+/* sidebar */
+.side{background:var(--surface);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:4px}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 10px 18px}
+.mark{width:36px;height:36px;border-radius:10px;background:#0e1315;display:grid;place-items:center;overflow:hidden}
+.mark svg{width:30px;height:30px}
+.bname{font-weight:750;font-size:17px;letter-spacing:-.02em}.bname b{color:var(--brand)}
+.badge{font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);background:var(--gold-soft);padding:2px 7px;border-radius:5px;margin-left:auto}
+.side>a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--r-sm);color:var(--ink2);font-weight:550;font-size:14px;cursor:pointer}
+.side>a:hover{background:var(--surface2);color:var(--ink)}
+.side>a.on{background:var(--surface2);color:var(--ink)}
+.side>a.on svg{color:var(--brand)}
+.side>a svg{width:18px;height:18px;opacity:.85}
+.nav-label{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);padding:14px 12px 6px}
+.side-foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 8px 2px;font-size:12px;color:var(--ink3)}
+.dot-on{width:7px;height:7px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+/* main */
+.main{padding:26px 32px 60px;overflow:auto}
+.top{display:flex;align-items:center;gap:14px;margin-bottom:24px}
+.top h1{font-size:24px;font-weight:760;letter-spacing:-.025em}
+.top p{font-size:13.5px;color:var(--ink2)}
+.search{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--pill,99px);padding:9px 14px;width:240px}
+.search input{background:none;border:none;color:var(--ink);font:inherit;font-size:13.5px;width:100%;outline:none}
+.search svg{width:16px;height:16px;color:var(--ink3)}
+.av{width:36px;height:36px;border-radius:50%;background:linear-gradient(150deg,var(--brand),var(--brand2));display:grid;place-items:center;color:#04201f;font-weight:750;font-size:13px}
+/* kpis */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px}
+.kpi .k{font-size:12.5px;color:var(--ink2);font-weight:600;display:flex;align-items:center;gap:7px}
+.kpi .k svg{width:15px;height:15px;color:var(--brand)}
+.kpi .v{font-size:27px;font-weight:780;letter-spacing:-.03em;margin-top:9px}
+.kpi .s{font-size:12px;font-weight:650;margin-top:4px}
+.up{color:var(--pos)}.down{color:var(--neg)}
+/* grid */
+.grid{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;align-items:start}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px}
+.card-h{display:flex;align-items:center;margin-bottom:16px}
+.card-h h3{font-size:15px;font-weight:680}.card-h .more{margin-left:auto;font-size:12px;color:var(--ink3)}
+/* table */
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);padding:0 10px 12px;font-weight:600}
+td{padding:12px 10px;border-top:1px solid var(--line);font-size:14px}
+tr:hover td{background:var(--surface2)}
+.u{display:flex;align-items:center;gap:11px}
+.u .ua{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:12px;color:#04201f}
+.u .nm{font-weight:620}.u .em{font-size:12px;color:var(--ink3)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:650;padding:4px 10px;border-radius:99px}
+.p-solo{background:var(--surface3);color:var(--ink2)}
+.p-fam{background:var(--brand-soft);color:var(--brand-ink)}
+.p-biz{background:rgba(214,172,85,.16);color:var(--gold)}
+.p-prem{background:rgba(123,124,224,.16);color:#b3aef5}
+.p-pio{background:var(--gold-soft);color:var(--gold)}
+.st{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+.st .d{width:7px;height:7px;border-radius:50%}
+.st.active .d{background:var(--brand)}.st.active{color:var(--brand-ink)}
+.st.trial .d{background:var(--gold)}.st.trial{color:var(--gold)}
+.st.churned .d{background:var(--neg)}.st.churned{color:var(--neg)}
+.amt{text-align:right;font-weight:700}
+/* pioneer */
+.pio .track{height:10px;border-radius:99px;background:var(--surface3);overflow:hidden;margin:14px 0 8px}
+.pio .track i{display:block;height:100%;width:8%;background:linear-gradient(90deg,var(--gold),#e0bd6e);border-radius:99px}
+.pio .row{display:flex;justify-content:space-between;font-size:13px;color:var(--ink2);margin-top:6px}
+/* bars */
+.bars{display:flex;align-items:flex-end;gap:10px;height:120px;margin-top:8px}
+.bars .b{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%}
+.bars .bar{width:100%;background:var(--brand);border-radius:6px 6px 0 0;min-height:6px}
+.bars .bl{font-size:10.5px;color:var(--ink3);font-weight:600}
+/* plan dist */
+.dist{display:grid;gap:11px}
+.dist .r{display:flex;align-items:center;gap:10px;font-size:13px}
+.dist .bar{flex:1;height:8px;border-radius:99px;background:var(--surface3);overflow:hidden}
+.dist .bar i{display:block;height:100%;border-radius:99px}
+.act{display:grid;gap:2px}
+.act .r{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+.act .r:last-child{border:none}
+.act .ic{width:30px;height:30px;border-radius:8px;background:var(--surface3);display:grid;place-items:center;font-size:14px}
+.act .t{color:var(--ink3);margin-left:auto;font-size:11.5px}
+.ag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.ag{background:var(--surface2);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.ag .h{display:flex;align-items:center;gap:11px;margin-bottom:11px}
+.ag .ic2{width:38px;height:38px;border-radius:10px;background:var(--brand-soft);display:grid;place-items:center;font-size:19px}
+.ag .nm{font-weight:680;font-size:14.5px}
+.ag .ro{font-size:12.5px;color:var(--ink2);min-height:52px;line-height:1.45}
+.ag .ft{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.ag .met{font-size:13.5px;font-weight:700}.ag .met span{color:var(--ink3);font-weight:500;font-size:11px;display:block;margin-top:1px}
+.tg{width:40px;height:23px;border-radius:99px;background:var(--brand);position:relative;cursor:pointer;flex:none;transition:background .15s}
+.tg::after{content:"";position:absolute;top:3px;left:20px;width:17px;height:17px;border-radius:50%;background:#fff;transition:left .15s}
+.tg.off{background:var(--surface3)}.tg.off::after{left:3px}
+.an-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
+.funnel{display:grid;gap:10px}
+.funnel .r{display:flex;align-items:center;gap:12px;font-size:13px}
+.funnel .lb{width:118px;color:var(--ink2);flex:none}
+.funnel .bar{height:34px;border-radius:9px;background:linear-gradient(90deg,var(--brand),var(--brand2));display:flex;align-items:center;padding:0 13px;color:#042524;font-weight:700;font-size:12.5px;white-space:nowrap}
+.ret{display:flex;align-items:flex-end;gap:8px;height:120px}
+.ret .b{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;height:100%}
+.ret .bar{width:100%;background:var(--brand);border-radius:5px 5px 0 0;min-height:5px}
+.ret .bl{font-size:10px;color:var(--ink3);font-weight:600}
+@media(max-width:1000px){.kpis{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.side{display:none}.app{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <div class="mark"><svg viewBox="0 0 200 200"><rect width="200" height="200" rx="40" fill="#0e1315"/><circle cx="100" cy="100" r="62" fill="none" stroke="#1FB6B3" stroke-width="6"/><path d="M100 50 L116 100 L100 112 L84 100 Z" fill="#1FB6B3"/><path d="M100 150 L84 100 L100 112 L116 100 Z" fill="#8b9295"/><circle cx="100" cy="106" r="9" fill="#0e1315" stroke="#1FB6B3" stroke-width="4"/></svg></div>
+      <div class="bname">Casa<b>Fin</b></div><span class="badge">Admin</span>
+    </div>
+    <div class="nav-label">Übersicht</div>
+    <a class="on" data-view="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7.5" height="9" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="5.5" rx="1.5"/><rect x="13.5" y="12" width="7.5" height="9" rx="1.5"/><rect x="3" y="15.5" width="7.5" height="5.5" rx="1.5"/></svg>Dashboard</a>
+    <a data-view="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17.5" cy="9.5" r="2.4"/><path d="M16 17.5a4 4 0 0 1 4.5 1.5"/></svg>Nutzer</a>
+    <a data-view="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6z"/></svg>Pioneer</a>
+    <div class="nav-label">Automatisierung</div>
+    <a data-view="agents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="8" width="16" height="11" rx="2.5"/><path d="M12 8V4M9 4h6"/><circle cx="9" cy="13" r="1.2"/><circle cx="15" cy="13" r="1.2"/></svg>KI-Agenten</a>
+    <div class="nav-label">Analyse</div>
+    <a data-view="analytics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>Analytics</a>
+    <a data-view="analytics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 3v18h18"/><path d="M7 14l3.5-4 3 2.5L21 6"/></svg>Umsatz</a>
+    <div class="nav-label">System</div>
+    <a data-view="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 7l2.6 1.5M17.2 15.5l2.6 1.5M4.2 17l2.6-1.5M17.2 8.5l2.6-1.5"/></svg>Einstellungen</a>
+    <div class="side-foot"><span class="dot-on"></span> Alle Systeme aktiv · CH-Server</div>
+  </aside>
+
+  <main class="main">
+    <div class="top">
+      <div><h1 id="h1">Admin Cockpit</h1><p>CasaFin · Übersicht · <span class="mono" id="today"></span></p></div>
+      <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="q" placeholder="Nutzer suchen …" oninput="filter()"/></div>
+      <div class="av">AB</div>
+    </div>
+
+    <section class="view" data-view="dashboard">
+    <div class="kpis">
+      <div class="kpi"><div class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 14l3.5-4 3 2.5L21 6"/></svg>MRR</div><div class="v num">CHF 18'420</div><div class="s up">↑ +14% vs. Vormonat</div></div>
+      <div class="kpi"><div class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/></svg>Aktive Nutzer</div><div class="v num">1'284</div><div class="s up">↑ +96 diese Woche</div></div>
+      <div class="kpi"><div class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10z"/></svg>Pioneer verkauft</div><div class="v num">16 / 199</div><div class="s" style="color:var(--gold)">CHF 3'184 Cash</div></div>
+      <div class="kpi"><div class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v4h-4"/></svg>Churn</div><div class="v num">2.4%</div><div class="s up">↓ gesund (&lt;3%)</div></div>
+    </div>
+
+    <div class="grid">
+      <div style="display:grid;gap:18px">
+        <div class="card">
+          <div class="card-h"><h3>Umsatz · letzte 8 Monate</h3><span class="more mono">ARR ~CHF 221k</span></div>
+          <div class="bars" id="bars"></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3>Nutzer</h3><span class="more">1'284 aktiv · <span id="count"></span> sichtbar</span></div>
+          <table>
+            <thead><tr><th>Nutzer</th><th>Tarif</th><th>Status</th><th style="text-align:right">MRR</th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="display:grid;gap:18px">
+        <div class="card pio">
+          <div class="card-h"><h3>Pioneer Access</h3><span class="more mono" style="color:var(--gold)">Batch 1</span></div>
+          <div class="track"><i style="width:8%"></i></div>
+          <div class="row"><span>16 / 199 verkauft</span><span class="num">8%</span></div>
+          <div class="row"><span>Umsatz Lifetime</span><span class="num">CHF 3'184</span></div>
+          <div class="row"><span>Nach Batch 1</span><span>CHF 249 · 99 Plätze</span></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3>Tarif-Verteilung</h3></div>
+          <div class="dist" id="dist"></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3>Letzte Aktivität</h3></div>
+          <div class="act" id="act"></div>
+        </div>
+      </div>
+    </div>
+    </section>
+
+    <!-- ===== AUTOMATISIERUNG ===== -->
+    <section class="view" data-view="agents" hidden>
+      <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+        <div class="kpi"><div class="k">⚡ Jobs heute</div><div class="v num">1'417</div><div class="s up">automatisch erledigt</div></div>
+        <div class="kpi"><div class="k">⏱ Zeit gespart</div><div class="v num">63 Std</div><div class="s up">↑ diese Woche</div></div>
+        <div class="kpi"><div class="k">🤖 Aktive Agenten</div><div class="v num">6 / 6</div><div class="s up">alle online</div></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h3>KI-Agenten · erledigen Jobs automatisch</h3><span class="more">Klick zum Pausieren</span></div>
+        <div class="ag-grid">
+          <div class="ag"><div class="h"><div class="ic2">💳</div><div class="nm">Dunning-Agent</div><div class="tg" style="margin-left:auto"></div></div><div class="ro">Versendet Zahlungserinnerungen automatisch — verhindert Mahnungen beim Kunden.</div><div class="ft"><div class="met">312<span>Jobs / Monat</span></div><div class="met" style="text-align:right">vor 4 Min<span>zuletzt aktiv</span></div></div></div>
+          <div class="ag"><div class="h"><div class="ic2">🛟</div><div class="nm">Churn-Rescue</div><div class="tg" style="margin-left:auto"></div></div><div class="ro">Erkennt Abwanderungs-Signale und sendet automatisch ein passendes Angebot.</div><div class="ft"><div class="met">47<span>gerettet / Monat</span></div><div class="met" style="text-align:right">vor 22 Min<span>zuletzt aktiv</span></div></div></div>
+          <div class="ag"><div class="h"><div class="ic2">🚀</div><div class="nm">Onboarding-Agent</div><div class="tg" style="margin-left:auto"></div></div><div class="ro">Führt neue Nutzer Schritt für Schritt durch das Setup — ohne Support.</div><div class="ft"><div class="met">96<span>Jobs / Monat</span></div><div class="met" style="text-align:right">vor 8 Min<span>zuletzt aktiv</span></div></div></div>
+          <div class="ag"><div class="h"><div class="ic2">🗂️</div><div class="nm">Steuer-Kampagne</div><div class="tg" style="margin-left:auto"></div></div><div class="ro">Saisonale Reminder & Tipps zur Steuerzeit — automatisch pro Kanton.</div><div class="ft"><div class="met">540<span>Jobs / Monat</span></div><div class="met" style="text-align:right">vor 1 Std<span>zuletzt aktiv</span></div></div></div>
+          <div class="ag"><div class="h"><div class="ic2">🛡️</div><div class="nm">Anomalie-Wächter</div><div class="tg" style="margin-left:auto"></div></div><div class="ro">Meldet verdächtige Transaktionen & Sicherheits-Auffälligkeiten in Echtzeit.</div><div class="ft"><div class="met">18<span>Alerts / Monat</span></div><div class="met" style="text-align:right">vor 35 Min<span>zuletzt aktiv</span></div></div></div>
+          <div class="ag"><div class="h"><div class="ic2">💬</div><div class="nm">Support-Triage</div><div class="tg" style="margin-left:auto"></div></div><div class="ro">Beantwortet häufige Fragen und leitet komplexe Tickets an das Team weiter.</div><div class="ft"><div class="met">204<span>Jobs / Monat</span></div><div class="met" style="text-align:right">vor 2 Min<span>zuletzt aktiv</span></div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ANALYTICS ===== -->
+    <section class="view" data-view="analytics" hidden>
+      <div class="an-grid">
+        <div class="kpi"><div class="k">Ø Verweildauer</div><div class="v num">8m 42s</div><div class="s up">↑ +1m 12s</div></div>
+        <div class="kpi"><div class="k">Sessions / Woche</div><div class="v num">4.3</div><div class="s up">pro Nutzer</div></div>
+        <div class="kpi"><div class="k">Stickiness · DAU/WAU</div><div class="v num">38%</div><div class="s up">↑ gesund</div></div>
+        <div class="kpi"><div class="k">Ø bis Pioneer-Kauf</div><div class="v num">6 Tage</div><div class="s" style="color:var(--ink2)">nach Demo-Start</div></div>
+      </div>
+      <div class="grid">
+        <div style="display:grid;gap:18px">
+          <div class="card">
+            <div class="card-h"><h3>Conversion-Funnel</h3><span class="more">letzte 30 Tage</span></div>
+            <div class="funnel">
+              <div class="r"><span class="lb">Besucher</span><div class="bar" style="width:100%">12'400</div></div>
+              <div class="r"><span class="lb">Demo gestartet</span><div class="bar" style="width:42%">4'820 · 39%</div></div>
+              <div class="r"><span class="lb">Account erstellt</span><div class="bar" style="width:24%;min-width:130px">1'960 · 16%</div></div>
+              <div class="r"><span class="lb">Zahlend</span><div class="bar" style="width:16%;min-width:130px">1'284 · 10%</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-h"><h3>Verweildauer pro Bereich</h3><span class="more">Ø pro Session</span></div>
+            <div class="dist">
+              <div class="r"><span style="width:92px;font-weight:600">Dashboard</span><div class="bar"><i style="width:100%;background:var(--brand)"></i></div><span class="num" style="width:46px;text-align:right;color:var(--ink2)">3:00</span></div>
+              <div class="r"><span style="width:92px;font-weight:600">Rechnungen</span><div class="bar"><i style="width:61%;background:var(--brand)"></i></div><span class="num" style="width:46px;text-align:right;color:var(--ink2)">1:50</span></div>
+              <div class="r"><span style="width:92px;font-weight:600">Budget</span><div class="bar"><i style="width:44%;background:var(--brand)"></i></div><span class="num" style="width:46px;text-align:right;color:var(--ink2)">1:20</span></div>
+              <div class="r"><span style="width:92px;font-weight:600">Fina</span><div class="bar"><i style="width:36%;background:var(--brand)"></i></div><span class="num" style="width:46px;text-align:right;color:var(--ink2)">1:05</span></div>
+              <div class="r"><span style="width:92px;font-weight:600">Steuer</span><div class="bar"><i style="width:28%;background:var(--brand)"></i></div><span class="num" style="width:46px;text-align:right;color:var(--ink2)">0:50</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;gap:18px">
+          <div class="card">
+            <div class="card-h"><h3>Retention</h3><span class="more">Wochen-Kohorte</span></div>
+            <div class="ret" id="ret"></div>
+            <div class="row" style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink3);margin-top:10px"><span>Woche 1 → 8</span><span>49% bleiben nach 2 Monaten</span></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><h3>Feature-Nutzung</h3><span class="more">% der Nutzer</span></div>
+            <div class="dist">
+              <div class="r"><span style="width:92px;font-weight:600">Dashboard</span><div class="bar"><i style="width:92%;background:var(--brand)"></i></div><span class="num" style="width:36px;text-align:right;color:var(--ink2)">92%</span></div>
+              <div class="r"><span style="width:92px;font-weight:600">Rechnungen</span><div class="bar"><i style="width:74%;background:var(--brand)"></i></div><span class="num" style="width:36px;text-align:right;color:var(--ink2)">74%</span></div>
+              <div class="r"><span style="width:92px;font-weight:600">Budget</span><div class="bar"><i style="width:61%;background:var(--brand)"></i></div><span class="num" style="width:36px;text-align:right;color:var(--ink2)">61%</span></div>
+              <div class="r"><span style="width:92px;font-weight:600">Fina</span><div class="bar"><i style="width:48%;background:var(--brand)"></i></div><span class="num" style="width:36px;text-align:right;color:var(--ink2)">48%</span></div>
+              <div class="r"><span style="width:92px;font-weight:600">Steuer</span><div class="bar"><i style="width:39%;background:var(--gold)"></i></div><span class="num" style="width:36px;text-align:right;color:var(--ink2)">39%</span></div>
+              <div class="r"><span style="width:92px;font-weight:600">Sparziele</span><div class="bar"><i style="width:33%;background:var(--gold)"></i></div><span class="num" style="width:36px;text-align:right;color:var(--ink2)">33%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const COL={Solo:'#6A7079',Familie:'#1FB6B3',Business:'#D6AC55',Premium:'#b3aef5',Pioneer:'#D6AC55'};
+const CLS={Solo:'p-solo',Familie:'p-fam',Business:'p-biz',Premium:'p-prem',Pioneer:'p-pio'};
+const users=[
+  ['Elena Bianchi','elena@studio.ch','Business','active',49],
+  ['M. & S. Frei','frei.familie@bluewin.ch','Familie','active',39],
+  ['Luca Conti','luca.conti@gmail.com','Pioneer','active',0],
+  ['Nadia Weber','n.weber@hispeed.ch','Premium','active',69],
+  ['Jonas Brunner','jonas@brunner.io','Solo','trial',0],
+  ['Sofia Rossi','sofia.rossi@me.com','Familie','active',39],
+  ['Tobias Meier','t.meier@gmx.ch','Business','active',49],
+  ['Aline Favre','aline@favre.ch','Solo','active',19],
+  ['David Keller','dkeller@bluewin.ch','Premium','churned',0],
+  ['Mara Lehmann','mara.l@protonmail.com','Pioneer','active',0],
+];
+const init=n=>n.split(/[ .]/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+const hue=n=>['#1FB6B3','#5BB8E8','#D6AC55','#b3aef5','#E2705E'][n.length%5];
+function rows(list){
+  document.getElementById('rows').innerHTML=list.map(u=>`<tr>
+    <td><div class="u"><div class="ua" style="background:${hue(u[0])}">${init(u[0])}</div><div><div class="nm">${u[0]}</div><div class="em">${u[1]}</div></div></div></td>
+    <td><span class="pill ${CLS[u[2]]}">${u[2]}</span></td>
+    <td><span class="st ${u[3]}"><span class="d"></span>${({active:'Aktiv',trial:'Testphase',churned:'Gekündigt'})[u[3]]}</span></td>
+    <td class="amt num">${u[4]?'CHF '+u[4]:'<span style=color:var(--gold)>Lifetime</span>'}</td></tr>`).join('');
+  document.getElementById('count').textContent=list.length;
+}
+function filter(){const q=document.getElementById('q').value.toLowerCase();rows(users.filter(u=>u[0].toLowerCase().includes(q)||u[1].toLowerCase().includes(q)||u[2].toLowerCase().includes(q)));}
+// bars
+const rev=[8.4,9.7,11.2,12.8,14.1,15.6,16.9,18.4];const mx=Math.max(...rev);const ms=['Nov','Dez','Jan','Feb','Mär','Apr','Mai','Jun'];
+document.getElementById('bars').innerHTML=rev.map((v,i)=>`<div class="b"><div style="flex:1;width:100%;display:flex;align-items:flex-end"><div class="bar" style="height:${v/mx*100}%;${i===rev.length-1?'':'background:var(--surface3)'}"></div></div><span class="bl">${ms[i]}</span></div>`).join('');
+// dist
+const dist=[['Familie',38],['Solo',26],['Business',18],['Premium',12],['Pioneer',6]];
+document.getElementById('dist').innerHTML=dist.map(d=>`<div class="r"><span style="width:74px;font-weight:600">${d[0]}</span><div class="bar"><i style="width:${d[1]}%;background:${COL[d[0]]}"></i></div><span class="num" style="color:var(--ink2);width:34px;text-align:right">${d[1]}%</span></div>`).join('');
+// activity
+const act=[['🎯','Pioneer #16 verkauft','vor 12 Min'],['🏢','Neuer Business-Account · Tobias M.','vor 1 Std'],['⬆️','Upgrade Solo → Familie · Sofia R.','vor 2 Std'],['📄','Steuer-Export erstellt · Elena B.','vor 3 Std'],['⚠️','Kündigung · David K.','gestern']];
+document.getElementById('act').innerHTML=act.map(a=>`<div class="r"><span class="ic">${a[0]}</span><span>${a[1]}</span><span class="t">${a[2]}</span></div>`).join('');
+document.getElementById('today').textContent=new Date().toLocaleDateString('de-CH',{day:'2-digit',month:'short',year:'numeric'});
+document.querySelectorAll('.side>a').forEach(a=>a.onclick=()=>{document.querySelectorAll('.side>a').forEach(x=>x.classList.remove('on'));a.classList.add('on');const v=a.dataset.view;document.querySelectorAll('.view').forEach(s=>s.hidden=s.dataset.view!==v);document.getElementById('h1').textContent=a.textContent.trim();document.querySelector('.main').scrollTop=0;});
+document.querySelectorAll('.tg').forEach(t=>t.onclick=()=>t.classList.toggle('off'));
+// retention bars
+const ret=[100,82,71,64,58,54,51,49];const rmx=100;
+document.getElementById('ret').innerHTML=ret.map((v,i)=>`<div class="b"><div style="flex:1;width:100%;display:flex;align-items:flex-end"><div class="bar" style="height:${v/rmx*100}%;${i===0?'':'opacity:.6'}"></div></div><span class="bl">W${i+1}</span></div>`).join('');
+rows(users);
+</script>
+</body>
+</html>
