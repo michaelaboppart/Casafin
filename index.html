@@ -526,8 +526,8 @@ footer{padding:40px 0;border-top:1px solid var(--line);color:var(--ink3);font-si
   <div class="pio-bar">
     <span class="k">Pioneer Access</span>
     <div class="barwrap"><div class="track"><i id="pioFill"></i></div></div>
-    <span class="pio-count"><b id="pioTaken">16</b> / 199 <span data-de="Plätze vergeben" data-en="spots taken"></span></span>
-    <span class="pio-live"><span class="live-dot"></span><b id="pioView">11</b>&nbsp;<span data-de="schauen gerade" data-en="viewing now"></span></span>
+    <span class="pio-count"><b id="pioTaken">0</b> / 100 <span data-de="Plätze vergeben" data-en="spots taken"></span></span>
+    
     <a class="btn btn-gold" href="https://buy.stripe.com/14AfZif5m5536y69fI5Ne0H" data-de="Solo Lifetime — CHF 199" data-en="Solo lifetime — CHF 199"></a>
   </div>
   <div class="cycle-seg-wrap">
@@ -677,12 +677,12 @@ footer{padding:40px 0;border-top:1px solid var(--line);color:var(--ink3);font-si
 (function(){
   var fill=document.getElementById('pioFill'),takenEl=document.getElementById('pioTaken'),viewEl=document.getElementById('pioView');
   if(!fill||!takenEl) return;
-  var taken=16,total=199;
+  var taken=0,total=100;
   function render(){ fill.style.width=(taken/total*100)+'%'; takenEl.textContent=taken; }
   render();
-  function viewers(){ if(viewEl) viewEl.textContent=8+Math.floor(Math.random()*16); setTimeout(viewers,2600+Math.random()*3600); }
-  setTimeout(viewers,3000);
-  function tick(){ setTimeout(function(){
+  function viewers(){ /* removed: fake viewer counter */ }
+  /* viewers disabled */
+  function tick(){ /* DISABLED — counter now only updates via real Stripe webhook */ return; setTimeout(function(){
     if(taken<total-1){ taken++; render(); takenEl.classList.remove('pio-flash'); void takenEl.offsetWidth; takenEl.classList.add('pio-flash'); }
     tick();
   },14000+Math.random()*20000); }
