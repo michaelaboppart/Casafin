@@ -181,6 +181,7 @@
   /* ============================================================ store */
   let DEK = null;          // CryptoKey (in-memory only)
   let data = null;         // decrypted state (in-memory only)
+  let demoMode = false;    // true when running in demo mode (no encryption, no persistence)
   let meta = null;         // { saltPw, saltRec, wrapPw, wrapRec, blob, createdAt }
   const subs = new Set();
   function emit() { subs.forEach((f) => f()); }
@@ -189,7 +190,7 @@
   function writeMeta(m) { localStorage.setItem(LS_VAULT, JSON.stringify(m)); }
 
   async function persist() {
-    if (!DEK || !data) return;
+    if (!DEK || !data || demoMode) return;
     meta.blob = await aesEnc(DEK, enc.encode(JSON.stringify(data)));
     writeMeta(meta);
   }
@@ -203,9 +204,18 @@
     setPrefs(p) { localStorage.setItem(LS_PREFS, JSON.stringify(Object.assign(this.getPrefs(), p))); },
 
     hasVault() { return !!readMeta(); },
-    isUnlocked() { return !!DEK; },
+    isUnlocked() { return !!DEK || demoMode; },
+    get isDemo() { return demoMode; },
     subscribe(fn) { subs.add(fn); return () => subs.delete(fn); },
     get data() { return data; },
+
+    enterDemo() {
+      data = seed();
+      demoMode = true;
+      DEK = null;
+      this.log("demo.entered", "Demo-Modus (keine Persistenz)");
+      emit();
+    },
 
     async create(password, profileName) {
       const saltPw = crypto.getRandomValues(new Uint8Array(16));
@@ -289,9 +299,9 @@
       } catch { return false; }
     },
 
-    lock() { DEK = null; data = null; emit(); },
+    lock() { DEK = null; data = null; demoMode = false; emit(); },
 
-    wipe() { localStorage.removeItem(LS_VAULT); DEK = null; data = null; emit(); },
+    wipe() { localStorage.removeItem(LS_VAULT); DEK = null; data = null; demoMode = false; emit(); },
 
     /* ----- mutations ----- */
     async update(mutator) {

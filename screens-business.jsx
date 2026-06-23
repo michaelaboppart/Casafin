@@ -1,7 +1,7 @@
 /* ============================================================
    CasaFin — Business (Einzelfirma): P&L · VAT · auto-bookkeeping
    ============================================================ */
-const { useState: useStateBiz } = React;
+const { useState: useStateBiz, useEffect: useEffectBiz } = React;
 
 /* Swiss SME chart of accounts (Kontenrahmen KMU) */
 const KONTO_REV = { nr: "3000", name: "Dienstleistungsertrag" };
@@ -22,6 +22,23 @@ function Business({ lang }) {
   const biz = d.business;
   const [open, setOpen] = useStateBiz(false);
   const [form, setForm] = useStateBiz({ kind: "revenue", label: "", amount: "", cat: "Material" });
+
+  // Listen for booking suggestions from Fina
+  useEffectBiz(() => {
+    function onFinaBooking(e) {
+      const b = e.detail;
+      if (!b) return;
+      setForm({
+        kind: b.kind || "expense",
+        label: b.label || "",
+        amount: b.amount ? String(b.amount) : "",
+        cat: b.category || "Sonstiges",
+      });
+      setOpen(true);
+    }
+    window.addEventListener("fina.booking", onFinaBooking);
+    return () => window.removeEventListener("fina.booking", onFinaBooking);
+  }, []);
 
   const rev = S.bizRevenue(), exp = S.bizExpenses(), profit = rev - exp;
   const vatOut = Math.round(rev * biz.vatRate / 100);

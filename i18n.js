@@ -65,6 +65,14 @@
     "sec.localOnly": { de: "Nur auf diesem Gerät", en: "This device only" },
     "sec.autoLockNote": { de: "Auto-Sperre nach Inaktivität aktiv", en: "Auto-lock on inactivity is on" },
 
+    /* ---- email gate ---- */
+    "gate.title": { de: "Willkommen bei CasaFin", en: "Welcome to CasaFin" },
+    "gate.sub": { de: "Gib deine Email ein, um die Demo zu testen oder deinen Tresor einzurichten.", en: "Enter your email to try the demo or set up your vault." },
+    "gate.emailLabel": { de: "Deine Email", en: "Your email" },
+    "gate.demo": { de: "Demo testen", en: "Try the demo" },
+    "gate.real": { de: "Tresor einrichten", en: "Set up vault" },
+    "gate.privacy": { de: "Wir verwenden deine Email nur für Produkt-Updates.", en: "We only use your email for product updates." },
+
     /* ---- dashboard ---- */
     "dash.greetMorning": { de: "Guten Morgen", en: "Good morning" },
     "dash.greetDay": { de: "Hallo", en: "Hello" },
@@ -149,6 +157,10 @@
     "fina.actions": { de: "Aktionen", en: "Actions" },
     "fina.urgent": { de: "Dringend", en: "Urgent" },
     "fina.thinking": { de: "Fina denkt nach …", en: "Fina is thinking …" },
+    "fina.upload": { de: "Beleg hochladen", en: "Upload receipt" },
+    "fina.bookingSuggest": { de: "Buchungsvorschlag", en: "Booking suggestion" },
+    "fina.bookingAccept": { de: "Übernehmen →", en: "Accept →" },
+    "fina.bookingNote": { de: "Kein Blind-Buchen — du bestätigst im Einzelfirma-Bereich.", en: "No blind booking — you confirm in the Business section." },
 
     /* ---- docs ---- */
     "docs.title": { de: "Dokumente", en: "Documents" },

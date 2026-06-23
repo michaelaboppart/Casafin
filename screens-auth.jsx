@@ -67,6 +67,52 @@ function AuthShell({ lang, setLang, theme, setTheme, children, sub }) {
   );
 }
 
+function EmailGate({ lang, setLang, theme, setTheme, onDemo, onReal }) {
+  const T = (k) => window.I18N.t(k, lang);
+  const [email, setEmail] = useStateA("");
+  const [busy, setBusy] = useStateA(false);
+
+  async function submit(mode) {
+    if (!/^[^@]+@[^@]+\.[^@]+$/.test(email.trim())) return;
+    setBusy(true);
+    // Lead speichern — nie blockieren
+    fetch("/api/lead", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email: email.trim(), source: mode === "demo" ? "casafin-demo" : "casafin-signup" }),
+    }).catch(() => {});
+    if (mode === "demo") onDemo(email.trim());
+    else onReal(email.trim());
+  }
+
+  return (
+    <AuthShell lang={lang} setLang={setLang} theme={theme} setTheme={setTheme}
+      sub={lang === "de" ? "Erst deine Email — dann Demo oder Tresor." : "Your email first — then demo or vault."}>
+      <div className="animate">
+        <div className="auth-icon"><Icon name="mail" size={22} /></div>
+        <h1 className="auth-h">{T("gate.title")}</h1>
+        <p className="auth-p">{T("gate.sub")}</p>
+        <div className="field" style={{ marginBottom: 18 }}>
+          <label>{T("gate.emailLabel")}</label>
+          <input className="input" type="email" value={email} autoFocus
+            placeholder={lang === "de" ? "deine@email.ch" : "your@email.com"}
+            onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && email.trim() && submit("demo")} />
+        </div>
+        <button className="btn btn-primary btn-block btn-lg" disabled={busy || !email.trim()}
+          onClick={() => submit("demo")}>
+          {busy ? "…" : <>{T("gate.demo")} <Icon name="arrow" size={17} /></>}
+        </button>
+        <button className="btn btn-ghost btn-block" style={{ marginTop: 10 }}
+          disabled={busy || !email.trim()} onClick={() => submit("real")}>
+          {T("gate.real")}
+        </button>
+        <div className="auth-foot-note"><Icon name="shield" size={14} /> {T("gate.privacy")}</div>
+      </div>
+    </AuthShell>
+  );
+}
+
 function AuthScreen({ lang, setLang, theme, setTheme, onUnlocked }) {
   const T = (k) => window.I18N.t(k, lang);
   const hasVault = window.Vault.hasVault();
@@ -247,4 +293,4 @@ function AuthScreen({ lang, setLang, theme, setTheme, onUnlocked }) {
   );
 }
 
-Object.assign(window, { AuthScreen, PwField });
+Object.assign(window, { AuthScreen, EmailGate, PwField });

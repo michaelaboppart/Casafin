@@ -557,10 +557,18 @@ ul { list-style: none; }
 .fina-input { display: flex; gap: 9px; padding: 14px 18px; border-top: 1px solid var(--line); }
 .fina-input .input { flex: 1; }
 .fina-input .btn { padding: 0 16px; }
+.fina-upload-btn { flex-shrink: 0; }
 .fina-disc { font-size: 11px; color: var(--ink-3); text-align: center; padding: 0 0 12px; }
 .fina-summary { background: linear-gradient(165deg, var(--brand-soft), transparent); }
 .action-card { transition: transform var(--dur), box-shadow var(--dur); }
 .action-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+/* Fina booking suggestion bubble */
+.bubble.booking-suggest { background: var(--brand-soft); border: 1px solid var(--brand); padding: 16px; border-radius: var(--r-md); max-width: 420px; }
+.booking-detail { display: grid; gap: 6px; margin-bottom: 8px; }
+.booking-detail > div { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
+.bk-label { color: var(--ink-3); font-weight: 600; }
+.bk-val { color: var(--ink); font-weight: 600; text-align: right; }
 
 /* responsive custom grids */
 @media (max-width: 860px) {
