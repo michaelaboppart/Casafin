@@ -1,6 +1,6 @@
 /* ============================================================
    CasaFin — Fina (AI copilot, real LLM via /api/fina)
-   Beleg-Upload + Text-Chat → Buchungsvorschlag → Bestätigung
+   Chat + Foto-Upload (Vision) + Spracheingabe (Voice) + Beleg-Upload
    ============================================================ */
 const { useState: useStateF, useRef: useRefF, useEffect: useEffectF } = React;
 
@@ -19,8 +19,11 @@ function Fina({ lang }) {
   const [msgs, setMsgs] = useStateF([{ from: "fina", text: T("fina.intro") }]);
   const [input, setInput] = useStateF("");
   const [thinking, setThinking] = useStateF(false);
+  const [recording, setRecording] = useStateF(false);
   const scrollRef = useRefF(null);
   const fileRef = useRefF(null);
+  const photoRef = useRefF(null);
+  const recognitionRef = useRefF(null);
 
   useEffectF(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [msgs, thinking]);
 
@@ -47,13 +50,18 @@ function Fina({ lang }) {
     return lines.join("\n");
   }
 
-  // Send to /api/fina and handle response
-  async function callFina(text) {
+  // Send to /api/fina and handle response (now supports image)
+  async function callFina(text, imageBase64, mode) {
     const ctx = buildContext();
+    const body = { lang, context: ctx };
+    if (text) body.message = text;
+    if (imageBase64) body.image = imageBase64;
+    if (mode) body.mode = mode;
+
     const r = await fetch("/api/fina", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ message: text, lang, context: ctx }),
+      body: JSON.stringify(body),
     });
     if (!r.ok) {
       return { type: "chat", text: de
@@ -71,10 +79,9 @@ function Fina({ lang }) {
     setThinking(true);
 
     try {
-      const resp = await callFina(q);
+      const resp = await callFina(q, null, "chat");
       setThinking(false);
       if (resp.type === "booking") {
-        // Show booking suggestion with confirm button
         setMsgs((m) => [...m, { from: "fina", booking: resp }]);
       } else {
         setMsgs((m) => [...m, { from: "fina", text: resp.text || resp.message || "…" }]);
@@ -87,39 +94,124 @@ function Fina({ lang }) {
     }
   }
 
-  // Beleg-Upload: read file as text (OCR would be server-side; for MVP we send filename + any text)
-  function handleFile(e) {
+  // ── Foto-Upload (Kamera): Bild als base64 an Claude Vision senden ──
+  function handlePhoto(e) {
     const file = e.target.files?.[0];
     if (!file || thinking) return;
+
     const reader = new FileReader();
     reader.onload = async () => {
-      const text = reader.result;
-      // Send the extracted text to Fina
-      const q = de
-        ? `Beleg hochgeladen: ${file.name}\n\nInhalt:\n${String(text).slice(0, 4000)}`
-        : `Receipt uploaded: ${file.name}\n\nContent:\n${String(text).slice(0, 4000)}`;
-      setMsgs((m) => [...m, { from: "me", text: de ? `📎 Beleg: ${file.name}` : `📎 Receipt: ${file.name}` }]);
+      const base64 = reader.result; // data URL
+      setMsgs((m) => [...m, { from: "me", text: de ? `📸 Foto: ${file.name}` : `📸 Photo: ${file.name}` }]);
       setThinking(true);
       try {
-        const resp = await callFina(q);
+        const resp = await callFina(null, base64, "photo");
         setThinking(false);
         if (resp.type === "booking") {
           setMsgs((m) => [...m, { from: "fina", booking: resp }]);
         } else {
           setMsgs((m) => [...m, { from: "fina", text: resp.text || "…" }]);
         }
-      } catch (e) {
+      } catch (err) {
+        setThinking(false);
+        setMsgs((m) => [...m, { from: "fina", text: de ? "Fehler beim Lesen des Fotos." : "Error reading photo." }]);
+      }
+    };
+    reader.readAsDataURL(file); // base64 data URL
+    e.target.value = "";
+  }
+
+  // ── Beleg-Upload (Text/CSV/PDF): als Text senden ──
+  function handleFile(e) {
+    const file = e.target.files?.[0];
+    if (!file || thinking) return;
+
+    // If it's an image, use handlePhoto instead
+    if (file.type.startsWith("image/")) {
+      handlePhoto(e);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const text = reader.result;
+      const q = de
+        ? `Beleg hochgeladen: ${file.name}\n\nInhalt:\n${String(text).slice(0, 4000)}`
+        : `Receipt uploaded: ${file.name}\n\nContent:\n${String(text).slice(0, 4000)}`;
+      setMsgs((m) => [...m, { from: "me", text: de ? `📎 Beleg: ${file.name}` : `📎 Receipt: ${file.name}` }]);
+      setThinking(true);
+      try {
+        const resp = await callFina(q, null, "booking");
+        setThinking(false);
+        if (resp.type === "booking") {
+          setMsgs((m) => [...m, { from: "fina", booking: resp }]);
+        } else {
+          setMsgs((m) => [...m, { from: "fina", text: resp.text || "…" }]);
+        }
+      } catch (err) {
         setThinking(false);
         setMsgs((m) => [...m, { from: "fina", text: de ? "Fehler beim Lesen des Belegs." : "Error reading receipt." }]);
       }
     };
     reader.readAsText(file);
-    e.target.value = ""; // reset input
+    e.target.value = "";
+  }
+
+  // ── Spracheingabe (Voice): Web Speech API ──
+  function toggleVoice() {
+    if (recording) {
+      // Stop recording
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+      setRecording(false);
+      return;
+    }
+
+    // Start recording
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      setMsgs((m) => [...m, { from: "fina", text: de
+        ? "Spracheingabe wird in diesem Browser nicht unterstützt. Versuche Chrome oder Safari."
+        : "Voice input not supported in this browser. Try Chrome or Safari." }]);
+      return;
+    }
+
+    const rec = new SR();
+    rec.lang = de ? "de-CH" : "en-US";
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    rec.continuous = false;
+
+    rec.onstart = () => setRecording(true);
+    rec.onend = () => setRecording(false);
+    rec.onerror = () => setRecording(false);
+
+    rec.onresult = async (event) => {
+      const transcript = event.results[0][0].transcript;
+      setMsgs((m) => [...m, { from: "me", text: `🎙️ ${transcript}` }]);
+      setThinking(true);
+      try {
+        const resp = await callFina(transcript, null, "voice");
+        setThinking(false);
+        if (resp.type === "booking") {
+          setMsgs((m) => [...m, { from: "fina", booking: resp }]);
+        } else {
+          setMsgs((m) => [...m, { from: "fina", text: resp.text || "…" }]);
+        }
+      } catch (err) {
+        setThinking(false);
+        setMsgs((m) => [...m, { from: "fina", text: de ? "Fehler bei der Spracherkennung." : "Voice recognition error." }]);
+      }
+    };
+
+    recognitionRef.current = rec;
+    rec.start();
   }
 
   // Confirm booking → pre-fill Business form via custom event
   function confirmBooking(booking) {
-    // Dispatch event that Business screen listens to
     window.dispatchEvent(new CustomEvent("fina.booking", { detail: booking }));
     setMsgs((m) => [...m, { from: "fina", text: de
       ? `✅ Buchungsvorschlag übernommen. Bitte überprüfe und bestätige im Einzelfirma-Bereich.`
@@ -152,12 +244,15 @@ function Fina({ lang }) {
                 return (
                   <div key={i} className="bubble fina booking-suggest">
                     <div style={{ fontWeight: 700, marginBottom: 8 }}>{de ? "📋 Buchungsvorschlag" : "📋 Booking suggestion"}</div>
-                    <div className="booking-detail">
-                      <div><span className="bk-label">{de ? "Typ" : "Type"}</span><span className="bk-val">{m.booking.kind === "revenue" ? (de ? "Ertrag" : "Revenue") : (de ? "Aufwand" : "Expense")}</span></div>
-                      <div><span className="bk-label">{de ? "Beschreibung" : "Description"}</span><span className="bk-val">{m.booking.label}</span></div>
-                      <div><span className="bk-label">{de ? "Betrag" : "Amount"}</span><span className="bk-val num" style={{ fontWeight: 740 }}>CHF {m.booking.amount}</span></div>
-                      <div><span className="bk-label">{de ? "Konto" : "Account"}</span><span className="bk-val">{m.booking.konto} · {m.booking.category}</span></div>
-                    </div>
+                      <div className="booking-detail">
+                        <div><span className="bk-label">{de ? "Typ" : "Type"}</span><span className="bk-val">{m.booking.kind === "revenue" ? (de ? "Ertrag" : "Revenue") : (de ? "Aufwand" : "Expense")}</span></div>
+                        <div><span className="bk-label">{de ? "Beschreibung" : "Description"}</span><span className="bk-val">{m.booking.label}</span></div>
+                        {m.booking.vendor && <div><span className="bk-label">{de ? "Anbieter" : "Vendor"}</span><span className="bk-val">{m.booking.vendor}</span></div>}
+                        <div><span className="bk-label">{de ? "Betrag" : "Amount"}</span><span className="bk-val num" style={{ fontWeight: 740 }}>CHF {m.booking.amount}</span></div>
+                        {m.booking.mwst != null && <div><span className="bk-label">{de ? "MWST" : "VAT"}</span><span className="bk-val num">CHF {m.booking.mwst} ({m.booking.mwst_rate || "?"}%)</span></div>}
+                        {m.booking.date && <div><span className="bk-label">{de ? "Datum" : "Date"}</span><span className="bk-val">{m.booking.date}</span></div>}
+                        <div><span className="bk-label">{de ? "Konto" : "Account"}</span><span className="bk-val">{m.booking.konto} · {m.booking.category}</span></div>
+                      </div>
                     {m.booking.explanation && <div style={{ fontSize: 12, color: "var(--ink-2)", marginTop: 8, lineHeight: 1.4 }}>{m.booking.explanation}</div>}
                     <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
                       <button className="btn btn-primary" style={{ fontSize: 13, padding: "8px 14px" }} onClick={() => confirmBooking(m.booking)}>
@@ -181,12 +276,29 @@ function Fina({ lang }) {
             )}
           </div>
           <div className="fina-input">
-            <button className="btn btn-ghost fina-upload-btn" onClick={() => fileRef.current?.click()} aria-label={de ? "Beleg hochladen" : "Upload receipt"} title={de ? "Beleg hochladen" : "Upload receipt"}>
+            {/* Foto-Upload (Kamera) */}
+            <button className="btn btn-ghost fina-upload-btn" onClick={() => photoRef.current?.click()} aria-label={de ? "Foto aufnehmen" : "Take photo"} title={de ? "Foto aufnehmen · Beleg scannen" : "Take photo · Scan receipt"}>
               <Icon name="upload" size={17} />
             </button>
-            <input type="file" ref={fileRef} onChange={handleFile} accept=".txt,.csv,.json,.pdf" style={{ display: "none" }} />
+            <input type="file" ref={photoRef} onChange={handlePhoto} accept="image/*" capture="environment" style={{ display: "none" }} />
+            
+            {/* Beleg-Upload (Text/CSV/PDF) */}
+            <button className="btn btn-ghost fina-upload-btn" onClick={() => fileRef.current?.click()} aria-label={de ? "Beleg hochladen" : "Upload receipt"} title={de ? "Beleg hochladen" : "Upload receipt"}>
+              <span style={{ fontSize: 17 }}>📎</span>
+            </button>
+            <input type="file" ref={fileRef} onChange={handleFile} accept=".txt,.csv,.json,.pdf,image/*" style={{ display: "none" }} />
+            
+            {/* Text-Input */}
             <input className="input" value={input} placeholder={T("fina.placeholder")}
               onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && ask()} />
+            
+            {/* Spracheingabe (Voice) */}
+            <button className="btn btn-ghost fina-upload-btn" onClick={toggleVoice} aria-label={de ? "Sprechen" : "Speak"} title={de ? "Sprechen · Beleg diktieren" : "Speak · Dictate receipt"}
+              style={recording ? { color: "var(--neg)", animation: "pulse 1s infinite" } : {}}>
+              {recording ? "●" : <span style={{ fontSize: 17 }}>🎙️</span>}
+            </button>
+            
+            {/* Senden */}
             <button className="btn btn-primary" onClick={() => ask()} aria-label="send"><Icon name="send" size={17} /></button>
           </div>
           <div className="fina-disc">{T("fina.disclaimer")}</div>
