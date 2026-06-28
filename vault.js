@@ -52,7 +52,7 @@
   /* ============================================================ seed data */
   function seed() {
     return {
-      profile: { name: "Elena Bianchi", initials: "EB", plan: "Pioneer", city: "Zürich" },
+      profile: { name: "Elena Bianchi", initials: "EB", email: "", plan: "Pioneer", city: "Zürich" },
       accounts: [
         { id: "a1", bank: "PostFinance", label: "Privatkonto", type: "checking", iban: "CH93·····1234", balance: 12000, status: "active", owner: "you" },
         { id: "a2", bank: "ZKB", label: "Gemeinschaftskonto", type: "savings", iban: "CH21·····5678", balance: 68000, status: "active", owner: "joint" },
@@ -217,7 +217,7 @@
       emit();
     },
 
-    async create(password, profileName) {
+    async create(password, profileName, profileEmail) {
       const saltPw = crypto.getRandomValues(new Uint8Array(16));
       const saltRec = crypto.getRandomValues(new Uint8Array(16));
       const phrase = makePhrase();
@@ -231,6 +231,9 @@
       if (profileName) {
         data.profile.name = profileName;
         data.profile.initials = profileName.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase() || "CF";
+      }
+      if (profileEmail) {
+        data.profile.email = profileEmail;
       }
       this.log("vault.created", "Tresor erstellt · AES-256");
       meta = {

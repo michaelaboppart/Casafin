@@ -126,6 +126,7 @@ function AuthScreen({ lang, setLang, theme, setTheme, onUnlocked }) {
   const [code, setCode] = useStateA("");
   const [recPhrase, setRecPhrase] = useStateA("");
   const [name, setName] = useStateA("");
+  const [email, setEmail] = useStateA("");
 
   const strength = pwStrength(pw);
   const strengthLabel = [T("sec.weak"), T("sec.weak"), T("sec.fair"), T("sec.good"), T("sec.strong")][strength];
@@ -133,10 +134,12 @@ function AuthScreen({ lang, setLang, theme, setTheme, onUnlocked }) {
 
   async function doCreate() {
     setErr("");
+    if (!email.trim()) return setErr(T("sec.emailRequired"));
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setErr(T("sec.emailInvalid"));
     if (pw.length < 8) return setErr(T("sec.tooShort"));
     if (pw !== pw2) return setErr(T("sec.mismatch"));
     setBusy(true);
-    const ph = await window.Vault.create(pw, name.trim());
+    const ph = await window.Vault.create(pw, name.trim(), email.trim());
     setBusy(false);
     setPhrase(ph);
     setMode("recovery");
@@ -187,6 +190,10 @@ function AuthScreen({ lang, setLang, theme, setTheme, onUnlocked }) {
           <div className="field" style={{ marginBottom: 14 }}>
             <label>{T("sec.name")}</label>
             <input className="input" value={name} autoFocus placeholder={lang === "de" ? "Vorname oder Familienname" : "First name or family name"} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div className="field" style={{ marginBottom: 14 }}>
+            <label>{T("sec.email")}</label>
+            <input className="input" type="email" value={email} placeholder={T("sec.emailPlaceholder")} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="field" style={{ marginBottom: 14 }}>
             <label>{T("sec.master")}</label>
