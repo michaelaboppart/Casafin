@@ -3,6 +3,12 @@
    ============================================================ */
 (function () {
   window.ACCENTS = {
+    olive: {
+      label: { de: "Olive", en: "Olive" },
+      swatch: "#B3C242",
+      light: { brand: "#B3C242", brand2: "#9AA836", ink: "#4E5A1C", soft: "#E9EECB", glow: "rgba(179,194,66,.18)" },
+      dark:  { brand: "#BECA67", brand2: "#C9D47E", ink: "#D6DE9A", soft: "rgba(190,202,103,.16)", glow: "rgba(190,202,103,.30)" },
+    },
     emerald: {
       label: { de: "Smaragd", en: "Emerald" },
       swatch: "#0E8A63",
@@ -28,7 +34,7 @@
       dark:  { brand: "#2BBFD0", brand2: "#34D2E2", ink: "#6FDEEA", soft: "rgba(43,191,208,.15)", glow: "rgba(43,191,208,.30)" },
     },
   };
-  window.ACCENT_ORDER = ["emerald", "green", "teal", "turquoise"];
+  window.ACCENT_ORDER = ["olive", "emerald", "green", "teal", "turquoise"];
 
   /* ---- custom colour: derive a full accent from one hex ---- */
   function hexToRgb(h) { h = h.replace("#", ""); if (h.length === 3) h = h.split("").map((c) => c + c).join(""); return [0, 2, 4].map((i) => parseInt(h.substr(i, 2), 16)); }
@@ -43,13 +49,13 @@
   window.applyAccent = function (key, theme, customHex) {
     const c = key === "custom" && customHex
       ? window.deriveAccent(customHex, theme)
-      : (window.ACCENTS[key] || window.ACCENTS.teal)[theme === "dark" ? "dark" : "light"];
+      : (window.ACCENTS[key] || window.ACCENTS.olive)[theme === "dark" ? "dark" : "light"];
     const s = document.documentElement.style;
     s.setProperty("--brand", c.brand);
     s.setProperty("--brand-2", c.brand2);
     s.setProperty("--brand-ink", c.ink);
     s.setProperty("--brand-soft", c.soft);
     s.setProperty("--brand-glow", c.glow);
-    s.setProperty("--pos", c.brand);
+    /* --pos stays a readable semantic green (set in CSS); not tied to a light accent */
   };
 })();

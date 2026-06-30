@@ -13,13 +13,11 @@ function App() {
   const prefs = window.Vault.getPrefs();
   const [lang, setLangState] = useState(prefs.lang);
   const [theme, setThemeState] = useState(prefs.theme);
-  const [accent, setAccentState] = useState(prefs.accent || "teal");
-  const [customColor, setCustomColorState] = useState(prefs.accentColor || "#0E9E8E");
+  const [accent, setAccentState] = useState(prefs.accent || "olive");
+  const [customColor, setCustomColorState] = useState(prefs.accentColor || "#B3C242");
   const [route, setRoute] = useState("dashboard");
   const [authed, setAuthed] = useState(false);
-  const [emailGatePassed, setEmailGatePassed] = useState(false);
   const vault = useVaultState();
-  const isDemo = vault.isDemo;
   const unlocked = vault.isUnlocked() && authed;
 
   useEffect(() => { document.documentElement.setAttribute("data-theme", theme); }, [theme]);
@@ -51,11 +49,6 @@ function App() {
 
   const lock = useCallback(() => { window.Vault.logPersist("vault.locked", "Manuell gesperrt"); window.Vault.lock(); setAuthed(false); }, []);
 
-  if (!emailGatePassed) {
-    return <EmailGate lang={lang} setLang={setLang} theme={theme} setTheme={setTheme}
-      onDemo={() => { window.Vault.enterDemo(); setAuthed(true); setEmailGatePassed(true); setRoute("dashboard"); }}
-      onReal={() => { setEmailGatePassed(true); }} />;
-  }
   if (!unlocked) {
     return <AuthScreen lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} onUnlocked={() => { setAuthed(true); setRoute("dashboard"); }} />;
   }
@@ -90,11 +83,6 @@ function App() {
         <div className="main-inner">
           <Topbar lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} onLock={lock}
             title={h.title} em={h.em} sub={h.sub} eyebrow={h.eyebrow} />
-          {isDemo && (
-            <div className="demo-banner" style={{ background: "var(--gold-soft)", color: "var(--ink)", padding: "8px 14px", borderRadius: "10px", fontSize: 13, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
-              <Icon name="sparkle" size={15} /> {lang === "de" ? "Demo-Modus — erstelle deinen Tresor, um echte Daten zu speichern." : "Demo mode — create your vault to save real data."}
-            </div>
-          )}
           {route === "dashboard" && <Dashboard lang={lang} go={setRoute} />}
           {route === "bills" && <Bills lang={lang} />}
           {route === "goals" && <Goals lang={lang} />}
