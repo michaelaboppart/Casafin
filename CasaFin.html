@@ -612,6 +612,8 @@ ul { list-style: none; }
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <!-- Supabase (account + trial) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
 /* ============================================================
@@ -1442,6 +1444,55 @@ ul { list-style: none; }
 
   </script>
 
+  <script>
+/* ============================================================
+   CasaFin — account & trial layer (Supabase)
+   Financial data stays on-device; server only tracks status.
+   Public (publishable) key only — safe in client.
+   ============================================================ */
+(function () {
+  var URL = "https://nhnumhospoycwxkeookm.supabase.co";
+  var KEY = "sb_publishable_rnwzkdZ3o_jdGJtpL5PK9g_cHY3dVJu";
+  var TRIAL_ENABLED = false;   // flip to true when the trial UX is finished
+  var client = null;
+  function sb() {
+    if (!client && window.supabase && window.supabase.createClient) {
+      client = window.supabase.createClient(URL, KEY, { auth: { persistSession: true, storageKey: "casafin.auth", autoRefreshToken: true } });
+    }
+    return client;
+  }
+  async function signUp(email, password, name) {
+    if (!TRIAL_ENABLED) return { skipped: true };
+    var c = sb(); if (!c) return { error: { message: "offline" } };
+    try { return await c.auth.signUp({ email: email, password: password, options: { data: { name: name || "" } } }); }
+    catch (e) { return { error: { message: String(e) } }; }
+  }
+  async function signIn(email, password) {
+    if (!TRIAL_ENABLED) return { skipped: true };
+    var c = sb(); if (!c) return { error: { message: "offline" } };
+    try { return await c.auth.signInWithPassword({ email: email, password: password }); }
+    catch (e) { return { error: { message: String(e) } }; }
+  }
+  async function signOut() { var c = sb(); if (c) try { await c.auth.signOut(); } catch (e) {} }
+  async function fetchAccess() {
+    var c = sb(); if (!c) return null;
+    try {
+      var u = await c.auth.getUser();
+      var user = u && u.data ? u.data.user : null;
+      if (!user) return null;
+      var r = await c.from("subscriptions").select("status,plan,trial_ends_at").eq("user_id", user.id).single();
+      if (r.error || !r.data) return { status: "unknown", hasAccess: true, days: null };
+      var ends = new Date(r.data.trial_ends_at).getTime();
+      var days = Math.max(0, Math.ceil((ends - Date.now()) / 86400000));
+      var hasAccess = r.data.status === "active" || (r.data.status === "trialing" && ends > Date.now());
+      return { status: r.data.status, plan: r.data.plan, trialEndsAt: r.data.trial_ends_at, days: days, hasAccess: hasAccess };
+    } catch (e) { return { status: "unknown", hasAccess: true, days: null }; }
+  }
+  window.CasaAuth = { sb: sb, signUp: signUp, signIn: signIn, signOut: signOut, fetchAccess: fetchAccess };
+})();
+
+  </script>
+
   <script type="text/babel" data-presets="react">
 /* ============================================================
    CasaFin — Icons (inline stroke SVGs)
@@ -1911,6 +1962,8 @@ function AuthScreen({ lang, setLang, theme, setTheme, onUnlocked }) {
     if (pw !== pw2) return setErr(T("sec.mismatch"));
     setBusy(true);
     const ph = await window.Vault.create(pw, name.trim(), email.trim());
+    window.Vault.setPrefs({ accEmail: email.trim() });
+    if (window.CasaAuth) window.CasaAuth.signUp(email.trim(), pw, name.trim());
     setBusy(false);
     setPhrase(ph);
     setMode("recovery");
@@ -1921,6 +1974,7 @@ function AuthScreen({ lang, setLang, theme, setTheme, onUnlocked }) {
     const ok = await window.Vault.unlock(pw);
     setBusy(false);
     if (!ok) { setErr(T("sec.wrong")); return; }
+    try { const _pe = window.Vault.getPrefs().accEmail; if (window.CasaAuth && _pe) window.CasaAuth.signIn(_pe, pw); } catch (e) {}
     if (window.Vault.data.settings.twoFa) setMode("twofa");
     else onUnlocked();
   }
