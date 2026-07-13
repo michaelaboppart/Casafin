@@ -9,11 +9,11 @@
 <meta property="og:description" content="Deine persönliche Finanz-App. Steuern, Budget, Dokumente — alles an einem Ort." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://casafin.ch" />
-<meta property="og:image" content="https://casafin.ch/casafin-logo-dark.png" />
+<meta property="og:image" content="https://casafin.ch/assets/casafin-og-banner.png" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="CasaFin — Endlich Überblick über dein Geld" />
 <meta name="twitter:description" content="Deine persönliche Finanz-App. Steuern, Budget, Dokumente — alles an einem Ort." />
-<meta name="twitter:image" content="https://casafin.ch/casafin-logo-dark.png" />
+<meta name="twitter:image" content="https://casafin.ch/assets/casafin-og-banner.png" />
 <meta property="og:site_name" content="CasaFin" />
 <link rel="canonical" href="https://www.casafin.ch/" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -25,7 +25,7 @@
   --font-mono:"JetBrains Mono",ui-monospace,monospace;
   --bg:#F4F4EF; --bg2:#EDEEE7; --surface:#FFFFFF; --surface2:#F6F6F1;
   --ink:#14161A; --ink2:#565B63; --ink3:#8B9098; --line:#E4E4DC; --line2:#D7D8CE;
-  --brand:#B3C242; --brand2:#9AA836; --brand-ink:#4E5A1C; --brand-soft:#E9EECB; --brand-glow:rgba(179,194,66,.18);
+  --brand:#0B8F92; --brand2:#0A7479; --brand-ink:#075257; --brand-soft:#E0F1F1; --brand-glow:rgba(11,143,146,.18);
   --gold:#C2862A; --gold-soft:#F8F0DB;
   --r-sm:12px; --r-md:16px; --r-lg:22px; --r-xl:30px; --pill:999px;
   --shadow-md:0 4px 16px rgba(20,22,26,.07),0 1px 3px rgba(20,22,26,.05);
@@ -51,7 +51,7 @@ em{font-style:normal;color:var(--brand)}
 .nav{position:sticky;top:0;z-index:50;background:rgba(244,244,239,.82);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
 .nav-in{display:flex;align-items:center;gap:14px;height:66px}
 .brand{display:flex;align-items:center;gap:11px}
-.mark{width:36px;height:36px;border-radius:11px;background:#1E2607;display:grid;place-items:center;box-shadow:0 10px 24px -8px var(--brand-glow);overflow:hidden}
+.mark{width:36px;height:36px;border-radius:11px;background:#0e0f0f;display:grid;place-items:center;box-shadow:0 10px 24px -8px var(--brand-glow);overflow:hidden}
 .mark img{width:100%;height:100%;object-fit:cover}
 .mark svg{width:20px;height:20px}
 .bname{font-weight:750;font-size:18px;letter-spacing:-.02em}
@@ -65,7 +65,7 @@ em{font-style:normal;color:var(--brand)}
 .seg button.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-md)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:650;font-size:14.5px;padding:11px 18px;border-radius:var(--r-sm);border:1px solid transparent;cursor:pointer;transition:transform .2s,background .2s,box-shadow .2s;white-space:nowrap}
 .btn svg{width:17px;height:17px}
-.btn-primary{background:var(--brand);color:#1E2607;box-shadow:0 12px 30px -10px var(--brand-glow)}
+.btn-primary{background:var(--brand);color:#fff;box-shadow:0 12px 30px -10px var(--brand-glow)}
 .btn-primary:hover{background:var(--brand2);transform:translateY(-1px)}
 .btn-ghost{background:var(--surface);border-color:var(--line);color:var(--ink)}
 .btn-ghost:hover{border-color:var(--line2);transform:translateY(-1px)}
@@ -139,7 +139,7 @@ section{padding:64px 0}
 @media (prefers-reduced-motion:reduce){.ticker-track{animation-duration:0s;animation:none}}
 
 /* security band */
-.band{background:linear-gradient(160deg,var(--brand2),#3A4519);color:#fff;border-radius:var(--r-xl);padding:34px 40px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;position:relative;overflow:hidden}
+.band{background:linear-gradient(160deg,var(--brand2),#053B3E);color:#fff;border-radius:var(--r-xl);padding:34px 40px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;position:relative;overflow:hidden}
 .band::after{content:none}
 .band .lock{width:58px;height:58px;border-radius:16px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);display:grid;place-items:center;flex-shrink:0;position:relative;z-index:1}
 .band .lock svg{width:28px;height:28px}
@@ -215,19 +215,19 @@ section{padding:64px 0}
 .pio-live{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:11px;letter-spacing:.03em;color:var(--brand-ink);background:var(--brand-soft);padding:5px 11px;border-radius:99px;white-space:nowrap}
 .pio-live b{color:var(--brand);font-weight:700}
 .live-dot{width:7px;height:7px;border-radius:50%;background:var(--brand);animation:livePulse 1.8s infinite}
-@keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(179,194,66,.5)}70%{box-shadow:0 0 0 8px rgba(179,194,66,0)}100%{box-shadow:0 0 0 0 rgba(179,194,66,0)}}
+@keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(11,143,146,.5)}70%{box-shadow:0 0 0 8px rgba(11,143,146,0)}100%{box-shadow:0 0 0 0 rgba(11,143,146,0)}}
 .pio-count b.pio-flash{animation:pioFlash .9s ease}
-@keyframes pioFlash{0%{transform:translateY(-3px) scale(1.25);color:#9AA836}55%{transform:translateY(0) scale(1.08)}100%{transform:none;color:var(--brand)}}
+@keyframes pioFlash{0%{transform:translateY(-3px) scale(1.25);color:#0A7479}55%{transform:translateY(0) scale(1.08)}100%{transform:none;color:var(--brand)}}
 .plans{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
 .plan{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:26px;position:relative}
 .plan-demo{display:block;text-align:center;margin-top:11px;font-size:13px;color:var(--ink2);text-decoration:none}
 .plan-demo:hover{color:var(--brand)}
 .cycle-seg-wrap{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 28px;flex-wrap:wrap}
 .cycle-seg{font-family:inherit;font-size:13.5px;font-weight:650;padding:8px 18px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--ink2);cursor:pointer;transition:all .18s}
-.cycle-seg.on{background:var(--brand);border-color:var(--brand);color:#1E2607}
+.cycle-seg.on{background:var(--brand);border-color:var(--brand);color:#fff}
 .cycle-note{font-size:12px;font-weight:700;color:var(--brand-ink);background:var(--brand-soft);padding:6px 12px;border-radius:99px}
 .plan.pop{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
-.plan .tag{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--brand);color:#1E2607;font-size:11px;font-weight:700;padding:3px 11px;border-radius:99px;white-space:nowrap}
+.plan .tag{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--brand);color:#fff;font-size:11px;font-weight:700;padding:3px 11px;border-radius:99px;white-space:nowrap}
 .plan .tag.tag-new{background:var(--gold)}
 .plan h3{font-size:17px;font-weight:720}
 .plan .price{font-size:34px;font-weight:780;letter-spacing:-.03em;margin:10px 0 4px}
@@ -237,7 +237,7 @@ section{padding:64px 0}
 .plan li svg{width:15px;height:15px;color:var(--brand);flex-shrink:0}
 
 /* final cta */
-.final{text-align:center;background:linear-gradient(160deg,var(--brand2),#3A4519);color:#fff;border-radius:var(--r-xl);padding:60px 40px;position:relative;overflow:hidden}
+.final{text-align:center;background:linear-gradient(160deg,var(--brand2),#053B3E);color:#fff;border-radius:var(--r-xl);padding:60px 40px;position:relative;overflow:hidden}
 .final::after{content:none}
 .final h2{font-size:40px;font-weight:780;letter-spacing:-.03em;position:relative;z-index:1}
 .final p{color:rgba(255,255,255,.8);font-size:16px;margin:14px auto 26px;max-width:50ch;position:relative;z-index:1}
@@ -493,9 +493,9 @@ footer{padding:40px 0;border-top:1px solid var(--line);color:var(--ink3);font-si
   </div>
   <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:40px;align-items:center" class="fina-grid">
     <div class="frame fina-chat-dark" style="padding:22px;display:grid;gap:12px">
-      <div style="align-self:flex-end;max-width:80%;background:var(--brand);color:#1E2607;padding:11px 15px;border-radius:16px;border-bottom-right-radius:5px;font-size:14px" data-de="Kann ich mir ein Auto für CHF 35'000 leisten?" data-en="Can I afford a car for CHF 35,000?"></div>
+      <div style="align-self:flex-end;max-width:80%;background:var(--brand);color:#fff;padding:11px 15px;border-radius:16px;border-bottom-right-radius:5px;font-size:14px" data-de="Kann ich mir ein Auto für CHF 35'000 leisten?" data-en="Can I afford a car for CHF 35,000?"></div>
       <div style="align-self:flex-start;max-width:88%;background:var(--surface2);border:1px solid var(--line);padding:11px 15px;border-radius:16px;border-bottom-left-radius:5px;font-size:14px;line-height:1.5" data-de="Du sparst aktuell ~CHF 3'220/Monat. Bei 48 Monaten Finanzierung wären das ~CHF 750/Mt. — rund 23% deiner Sparquote. Tragbar. 👍" data-en="You currently save ~CHF 3,220/month. Financed over 48 months that's ~CHF 750/mo — about 23% of your savings rate. Affordable. 👍"></div>
-      <div style="align-self:flex-end;max-width:80%;background:var(--brand);color:#1E2607;padding:11px 15px;border-radius:16px;border-bottom-right-radius:5px;font-size:14px" data-de="Wie viel kann ich noch in die 3. Säule?" data-en="How much room is left in pillar 3a?"></div>
+      <div style="align-self:flex-end;max-width:80%;background:var(--brand);color:#fff;padding:11px 15px;border-radius:16px;border-bottom-right-radius:5px;font-size:14px" data-de="Wie viel kann ich noch in die 3. Säule?" data-en="How much room is left in pillar 3a?"></div>
       <div style="align-self:flex-start;max-width:88%;background:var(--surface2);border:1px solid var(--line);padding:11px 15px;border-radius:16px;border-bottom-left-radius:5px;font-size:14px;line-height:1.5" data-de="Noch CHF 4'342 — spart dir in Zürich ~CHF 800–1'200 Steuern. Soll ich's vormerken?" data-en="CHF 4,342 left — saves you ~CHF 800–1,200 in Zurich taxes. Want me to flag it?"></div>
     </div>
     <div>
