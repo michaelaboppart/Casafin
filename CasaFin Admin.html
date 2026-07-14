@@ -12,8 +12,8 @@
   --font-ui:"Hanken Grotesk",-apple-system,sans-serif;--font-mono:"JetBrains Mono",monospace;
   --bg:#0A0C0F;--surface:#14171C;--surface2:#1A1E24;--surface3:#20252C;
   --ink:#F1F3F1;--ink2:#A4AAB2;--ink3:#6A7079;--line:#262B32;--line2:#323841;
-  --brand:#1FB6B3;--brand2:#2ACAC4;--brand-soft:rgba(31,182,179,.14);--brand-ink:#64D8D2;
-  --gold:#D6AC55;--gold-soft:rgba(214,172,85,.14);--neg:#E2705E;--neg-soft:rgba(226,112,94,.14);--pos:#1FB6B3;
+  --brand:#B3C242;--brand2:#9AA836;--brand-soft:rgba(179,194,66,.14);--brand-ink:#C9D66A;
+  --gold:#D6AC55;--gold-soft:rgba(214,172,85,.14);--neg:#E2705E;--neg-soft:rgba(226,112,94,.14);--pos:#B3C242;
   --r:16px;--r-sm:11px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -123,7 +123,7 @@ tr:hover td{background:var(--surface2)}
 <div class="app">
   <aside class="side">
     <div class="brand">
-      <div class="mark"><svg viewBox="0 0 200 200"><rect width="200" height="200" rx="40" fill="#0e1315"/><circle cx="100" cy="100" r="62" fill="none" stroke="#1FB6B3" stroke-width="6"/><path d="M100 50 L116 100 L100 112 L84 100 Z" fill="#1FB6B3"/><path d="M100 150 L84 100 L100 112 L116 100 Z" fill="#8b9295"/><circle cx="100" cy="106" r="9" fill="#0e1315" stroke="#1FB6B3" stroke-width="4"/></svg></div>
+      <div class="mark"><svg viewBox="0 0 200 200"><rect width="200" height="200" rx="40" fill="#0e1315"/><circle cx="100" cy="100" r="62" fill="none" stroke="#B3C242" stroke-width="6"/><path d="M100 50 L116 100 L100 112 L84 100 Z" fill="#B3C242"/><path d="M100 150 L84 100 L100 112 L116 100 Z" fill="#8b9295"/><circle cx="100" cy="106" r="9" fill="#0e1315" stroke="#B3C242" stroke-width="4"/></svg></div>
       <div class="bname">Casa<b>Fin</b></div><span class="badge">Admin</span>
     </div>
     <div class="nav-label">Übersicht</div>
@@ -264,7 +264,7 @@ tr:hover td{background:var(--surface2)}
 </div>
 
 <script>
-const COL={Solo:'#6A7079',Familie:'#1FB6B3',Business:'#D6AC55',Premium:'#b3aef5',Pioneer:'#D6AC55'};
+const COL={Solo:'#6A7079',Familie:'#B3C242',Business:'#D6AC55',Premium:'#b3aef5',Pioneer:'#D6AC55'};
 const CLS={Solo:'p-solo',Familie:'p-fam',Business:'p-biz',Premium:'p-prem',Pioneer:'p-pio'};
 const users=[
   ['Elena Bianchi','elena@studio.ch','Business','active',49],
@@ -279,7 +279,7 @@ const users=[
   ['Mara Lehmann','mara.l@protonmail.com','Pioneer','active',0],
 ];
 const init=n=>n.split(/[ .]/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();
-const hue=n=>['#1FB6B3','#5BB8E8','#D6AC55','#b3aef5','#E2705E'][n.length%5];
+const hue=n=>['#B3C242','#5BB8E8','#D6AC55','#b3aef5','#E2705E'][n.length%5];
 function rows(list){
   document.getElementById('rows').innerHTML=list.map(u=>`<tr>
     <td><div class="u"><div class="ua" style="background:${hue(u[0])}">${init(u[0])}</div><div><div class="nm">${u[0]}</div><div class="em">${u[1]}</div></div></div></td>
