@@ -70,7 +70,47 @@ function AuthShell({ lang, setLang, theme, setTheme, children, sub }) {
 function AuthScreen({ lang, setLang, theme, setTheme, onUnlocked }) {
   const T = (k) => window.I18N.t(k, lang);
   const hasVault = window.Vault.hasVault();
-  const [mode, setMode] = useStateA(hasVault ? "unlock" : "create");
+  const magicAvailable = !!window.CasaAuthMagic;
+  const [mode, setMode] = useStateA(magicAvailable ? "magic-check" : (hasVault ? "unlock" : "create"));
+  const [magicEmail, setMagicEmail] = useStateA("");
+  const [magicSent, setMagicSent] = useStateA(false);
+  const [session, setSession] = useStateA(null);
+
+  // ── Magic Link Session: prüfen + auf Login-Redirect reagieren ──
+  useEffectA(() => {
+    if (!magicAvailable) return;
+    let unsub = null;
+    (async () => {
+      const s = await window.CasaAuthMagic.getSession();
+      if (s) await enterWithSession(s);
+      else setMode("magic");
+      unsub = window.CasaAuthMagic.onAuth(async (sess) => {
+        if (sess) await enterWithSession(sess);
+      });
+    })();
+    return () => unsub && unsub();
+  }, []);
+
+  async function enterWithSession(s) {
+    setSession(s);
+    // Remote-Vault anbinden: holt verschlüsselten Blob (neues Gerät) oder pusht lokalen Stand
+    if (window.Vault.attachRemote && window.CasaSB) {
+      try { await window.Vault.attachRemote(window.CasaSB, s.user.id); } catch (e) {}
+    }
+    setMode(window.Vault.hasVault() ? "unlock" : "create");
+    if (!magicEmail && s.user?.email) setMagicEmail(s.user.email);
+  }
+
+  async function doMagic() {
+    setErr("");
+    const em = magicEmail.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return setErr(T("sec.emailInvalid"));
+    setBusy(true);
+    const r = await window.CasaAuthMagic.sendMagicLink(em);
+    setBusy(false);
+    if (!r.ok) return setErr(r.error || (lang === "de" ? "Senden fehlgeschlagen." : "Sending failed."));
+    setMagicSent(true);
+  }
   const [pw, setPw] = useStateA("");
   const [pw2, setPw2] = useStateA("");
   const [err, setErr] = useStateA("");
@@ -129,6 +169,8 @@ function AuthScreen({ lang, setLang, theme, setTheme, onUnlocked }) {
   }
 
   const asideSub = {
+    "magic-check": lang === "de" ? "Einen Moment — Anmeldung wird geprüft." : "One moment — checking your session.",
+    magic: lang === "de" ? "Kein Passwort nötig: Wir senden dir einen Anmelde-Link per E-Mail." : "No password needed: we email you a sign-in link.",
     create: T("sec.setupSub"),
     recovery: T("sec.recoverySub"),
     unlock: lang === "de" ? "Alle Daten sind mit deinem Master-Passwort verschlüsselt — nur auf diesem Gerät." : "All data is encrypted with your master password — on this device only.",
@@ -138,6 +180,47 @@ function AuthScreen({ lang, setLang, theme, setTheme, onUnlocked }) {
 
   return (
     <AuthShell lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} sub={asideSub}>
+      {/* ---------- MAGIC CHECK (Session wird geprüft) ---------- */}
+      {mode === "magic-check" && (
+        <div className="animate" style={{ textAlign: "center", padding: "40px 0" }}>
+          <div className="auth-icon"><Icon name="shield" size={22} /></div>
+          <p className="auth-p">{lang === "de" ? "Anmeldung wird geprüft …" : "Checking session …"}</p>
+        </div>
+      )}
+
+      {/* ---------- MAGIC LINK LOGIN ---------- */}
+      {mode === "magic" && (
+        <div className="animate">
+          <div className="auth-icon"><Icon name="key" size={22} /></div>
+          <h1 className="auth-h">{lang === "de" ? "Anmelden bei CasaFin" : "Sign in to CasaFin"}</h1>
+          {!magicSent ? (
+            <>
+              <p className="auth-p">{lang === "de" ? "Gib deine E-Mail ein — wir senden dir einen Anmelde-Link. Kein Passwort nötig." : "Enter your email — we'll send you a sign-in link. No password needed."}</p>
+              <div className="field" style={{ marginBottom: 18 }}>
+                <label>{T("sec.email")}</label>
+                <input className="input" type="email" value={magicEmail} autoFocus placeholder={T("sec.emailPlaceholder")}
+                  onChange={(e) => setMagicEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && doMagic()} />
+              </div>
+              {err && <div className="auth-err">{err}</div>}
+              <button className="btn btn-primary btn-block btn-lg" onClick={doMagic} disabled={busy}>
+                {busy ? "…" : <>{lang === "de" ? "Magic Link senden" : "Send magic link"} <Icon name="arrow" size={17} /></>}
+              </button>
+              <div className="auth-foot-note"><Icon name="shield" size={14} /> {lang === "de" ? "Dein Tresor bleibt Ende-zu-Ende verschlüsselt — der Link meldet dich nur an." : "Your vault stays end-to-end encrypted — the link only signs you in."}</div>
+            </>
+          ) : (
+            <>
+              <p className="auth-p">{lang === "de"
+                ? <>Wir haben dir einen Link an <b>{magicEmail}</b> gesendet. Öffne die E-Mail und klicke auf den Link — dieses Fenster erkennt die Anmeldung automatisch.</>
+                : <>We sent a link to <b>{magicEmail}</b>. Open the email and click the link — this window detects the sign-in automatically.</>}</p>
+              <button className="auth-link" onClick={() => { setMagicSent(false); setErr(""); }}>
+                {lang === "de" ? "Andere E-Mail verwenden" : "Use a different email"}
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       {/* ---------- CREATE ---------- */}
       {mode === "create" && (
         <div className="animate">

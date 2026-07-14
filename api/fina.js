@@ -9,12 +9,21 @@ export const config = { runtime: "nodejs" };
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
   try {
-    const { message, image, lang, context, mode } = req.body || {};
-    
+    const { message, image, lang, context, mode, consent } = req.body || {};
+
+    // revDSG: Ohne erteilten Consent verarbeitet Fina nichts
+    if (consent !== true) {
+      return res.status(403).json({ error: "consent_required" });
+    }
+
     // At least one of message or image must be present
     if (!message && !image) {
       return res.status(400).json({ error: "message or image required" });
     }
+
+    // Datensparsamkeit: context darf nur aggregierte Kurzwerte enthalten.
+    // Schutznetz gegen versehentliche Rohdaten: Grössen-Limit hart durchsetzen.
+    const safeContext = typeof context === "string" ? context.slice(0, 2000) : "";
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) return res.status(500).json({ error: "ANTHROPIC_API_KEY not set" });
@@ -116,13 +125,13 @@ Keep answers concise. Use Swiss formats (CHF, dot as decimal separator).`;
     // ── Build user message ──────────────────────────────
     let userContent = [];
 
-    // Context (financial data of the user)
-    if (context) {
+    // Context: NUR aggregierte Werte (Datensparsamkeit, revDSG)
+    if (safeContext) {
       userContent.push({
         type: "text",
         text: de
-          ? `Kontext des Nutzers:\n${context}\n\nNutzer-Eingabe:`
-          : `User context:\n${context}\n\nUser input:`
+          ? `Kontext des Nutzers (nur aggregierte Werte):\n${safeContext}\n\nNutzer-Eingabe:`
+          : `User context (aggregated values only):\n${safeContext}\n\nUser input:`
       });
     }
 

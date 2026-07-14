@@ -1459,7 +1459,7 @@ ul { list-style: none; }
 (function () {
   var URL = "https://nhnumhospoycwxkeookm.supabase.co";
   var KEY = "sb_publishable_rnwzkdZ3o_jdGJtpL5PK9g_cHY3dVJu";
-  var TRIAL_ENABLED = false;   // flip to true when the trial UX is finished
+  var TRIAL_ENABLED = true;   // Magic Link auth is live
   var client = null;
   function sb() {
     if (!client && window.supabase && window.supabase.createClient) {
@@ -1495,6 +1495,55 @@ ul { list-style: none; }
     } catch (e) { return { status: "unknown", hasAccess: true, days: null }; }
   }
   window.CasaAuth = { sb: sb, signUp: signUp, signIn: signIn, signOut: signOut, fetchAccess: fetchAccess };
+
+  /* ============================================================
+     CasaFin — Magic Link Auth (Supabase OTP)
+     Wraps Supabase auth.signInWithOtp for passwordless login
+     ============================================================ */
+  (function () {
+    async function getSession() {
+      var c = sb(); if (!c) return null;
+      try {
+        var u = await c.auth.getUser();
+        return (u && u.data && u.data.user) ? { user: u.data.user, session: u.data } : null;
+      } catch (e) { return null; }
+    }
+    async function sendMagicLink(email) {
+      var c = sb(); if (!c) return { ok: false, error: "offline" };
+      try {
+        var r = await c.auth.signInWithOtp({
+          email: email,
+          options: {
+            emailRedirectTo: window.location.origin + window.location.pathname,
+          }
+        });
+        if (r.error) return { ok: false, error: r.error.message };
+        return { ok: true };
+      } catch (e) { return { ok: false, error: String(e) }; }
+    }
+    function onAuth(callback) {
+      var c = sb(); if (!c) return null;
+      try {
+        var { data: sub } = c.auth.onAuthStateChange(function (event, session) {
+          if (session && session.user) callback({ user: session.user, session: session });
+          else if (event === 'SIGNED_OUT') callback(null);
+        });
+        return function () { if (sub && sub.unsubscribe) sub.unsubscribe(); };
+      } catch (e) { return null; }
+    }
+    async function signOutMagic() {
+      var c = sb(); if (!c) return;
+      try { await c.auth.signOut(); } catch (e) {}
+    }
+    window.CasaAuthMagic = {
+      getSession: getSession,
+      sendMagicLink: sendMagicLink,
+      onAuth: onAuth,
+      signOut: signOutMagic,
+    };
+    // Expose Supabase client for Vault.attachRemote
+    window.CasaSB = sb();
+  })();
 })();
 
   </script>

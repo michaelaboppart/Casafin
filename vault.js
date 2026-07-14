@@ -189,10 +189,55 @@
   function readMeta() { try { return JSON.parse(localStorage.getItem(LS_VAULT)); } catch { return null; } }
   function writeMeta(m) { localStorage.setItem(LS_VAULT, JSON.stringify(m)); }
 
+  /* ============================================================ remote sync
+     Supabase = persistenter Speicher, localStorage = Cache.
+     Es wird IMMER nur das verschlüsselte meta-Objekt synchronisiert
+     (Salts, gewrappte Keys, Ciphertext) — der Server sieht nie Plaintext.  */
+  let remote = null;        // { sb, userId }  (sb = Supabase client)
+  let pushTimer = null;
+  let lastPushError = null;
+
+  async function remotePush() {
+    if (!remote || !meta || demoMode) return;
+    try {
+      const { error } = await remote.sb
+        .from("vault_blobs")
+        .upsert({
+          user_id: remote.userId,
+          encrypted_blob: JSON.stringify(meta),
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "user_id" });
+      lastPushError = error || null;
+      if (error) console.error("Vault sync push failed:", error.message);
+    } catch (e) {
+      lastPushError = e;
+      console.error("Vault sync push failed:", e.message);
+    }
+  }
+  function schedulePush() {
+    if (!remote) return;
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(remotePush, 1500); // debounce
+  }
+  async function remotePull() {
+    if (!remote) return null;
+    try {
+      const { data: rows, error } = await remote.sb
+        .from("vault_blobs")
+        .select("encrypted_blob, updated_at")
+        .eq("user_id", remote.userId)
+        .maybeSingle();
+      if (error || !rows || !rows.encrypted_blob) return null;
+      return { meta: JSON.parse(rows.encrypted_blob), updatedAt: Date.parse(rows.updated_at) || 0 };
+    } catch { return null; }
+  }
+
   async function persist() {
     if (!DEK || !data || demoMode) return;
     meta.blob = await aesEnc(DEK, enc.encode(JSON.stringify(data)));
+    meta.updatedAt = Date.now();
     writeMeta(meta);
+    schedulePush();
   }
 
   const Vault = {
@@ -205,6 +250,34 @@
 
     hasVault() { return !!readMeta(); },
     isUnlocked() { return !!DEK || demoMode; },
+
+    /* ----- remote sync (Supabase) ----- */
+    // Nach Login aufrufen: Vault.attachRemote(supabaseClient, user.id)
+    // Holt den neueren Stand (lokal vs. remote, updatedAt entscheidet).
+    async attachRemote(sb, userId) {
+      remote = { sb, userId };
+      const local = readMeta();
+      const rem = await remotePull();
+      if (rem && (!local || (rem.meta.updatedAt || rem.updatedAt || 0) > (local.updatedAt || 0))) {
+        writeMeta(rem.meta);           // Remote ist neuer (oder lokal leer) → Cache aktualisieren
+        if (meta && DEK) { meta = rem.meta; } // entsperrt: meta-Referenz nachziehen
+      } else if (local && (!rem || (local.updatedAt || 0) > (rem.meta.updatedAt || rem.updatedAt || 0))) {
+        await remotePush();            // Lokal ist neuer → hochsynchen
+      }
+      emit();
+    },
+    detachRemote() { clearTimeout(pushTimer); remote = null; },
+    get syncState() {
+      return { attached: !!remote, lastError: lastPushError ? String(lastPushError.message || lastPushError) : null };
+    },
+    // Für Logout: lokalen Vault-Cache UND Speicher-Schlüssel entfernen
+    signOutWipe() {
+      clearTimeout(pushTimer);
+      remote = null;
+      localStorage.removeItem(LS_VAULT);
+      DEK = null; data = null; demoMode = false;
+      emit();
+    },
     get isDemo() { return demoMode; },
     subscribe(fn) { subs.add(fn); return () => subs.delete(fn); },
     get data() { return data; },

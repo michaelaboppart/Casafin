@@ -18,6 +18,17 @@ function Fina({ lang }) {
     : ["Book an invoice", "Can I afford a car for CHF 35,000?", "How much can I add to pillar 3a?", "What tax deductions do I have?"];
   const [msgs, setMsgs] = useStateF([{ from: "fina", text: T("fina.intro") }]);
   const [input, setInput] = useStateF("");
+  // ── Fina AI Consent (revDSG): einmalige Zustimmung, verschlüsselt im Vault ──
+  const [consent, setConsent] = useStateF(!!(window.Vault.data && window.Vault.data.settings && window.Vault.data.settings.finaConsent));
+  const [consentChecked, setConsentChecked] = useStateF(false);
+  async function giveConsent() {
+    if (!consentChecked) return;
+    await window.Vault.update((d) => {
+      d.settings.finaConsent = { given: true, ts: Date.now() };
+      window.Vault.log("fina.consent", "Fina-Consent erteilt");
+    });
+    setConsent(true);
+  }
   const [thinking, setThinking] = useStateF(false);
   const [recording, setRecording] = useStateF(false);
   const scrollRef = useRefF(null);
@@ -53,7 +64,7 @@ function Fina({ lang }) {
   // Send to /api/fina and handle response (now supports image)
   async function callFina(text, imageBase64, mode) {
     const ctx = buildContext();
-    const body = { lang, context: ctx };
+    const body = { lang, context: ctx, consent: true }; // Server verlangt Consent-Flag
     if (text) body.message = text;
     if (imageBase64) body.image = imageBase64;
     if (mode) body.mode = mode;
@@ -225,6 +236,35 @@ function Fina({ lang }) {
     : [{ icon: "💳", t: "Health insurance AXA due", d: "CHF 420 in 3 days — set up automatic payment.", v: "CHF 420", u: true },
        { icon: "📋", t: "Optimise tax deductions", d: "CHF 1,200 additional deductions possible — ZH 2025.", v: "+CHF 1,200", u: false },
        { icon: "💡", t: "Leisure over budget", d: "CHF 112 above monthly budget — trending up.", v: "−CHF 112", u: false }];
+
+  // ── Consent-Gate: vor erster Fina-Nutzung (revDSG) ──
+  if (!consent) {
+    return (
+      <div className="animate">
+        <div className="card" style={{ maxWidth: 560, margin: "40px auto", padding: "36px 34px", textAlign: "center" }}>
+          <div className="fina-orb lg" style={{ margin: "0 auto 16px" }}><Icon name="sparkle" size={22} /></div>
+          <h2 style={{ fontSize: 20, fontWeight: 780, marginBottom: 10 }}>{de ? "Bevor Fina loslegt" : "Before Fina starts"}</h2>
+          <p style={{ color: "var(--ink-3)", fontSize: 14.5, lineHeight: 1.65, marginBottom: 18 }}>
+            {de
+              ? "Fina beantwortet deine Fragen mit Hilfe von Anthropic Claude (Auftragsverarbeiter). Dafür werden nur aggregierte Werte übermittelt — z.B. «Ausgaben Mai: CHF 3'200» — niemals einzelne Transaktionen oder dein Tresor-Inhalt. Belege, die du aktiv hochlädst, werden nur zur Analyse verarbeitet und nicht gespeichert."
+              : "Fina answers your questions using Anthropic Claude (data processor). Only aggregated values are transmitted — e.g. \"May spending: CHF 3,200\" — never individual transactions or your vault contents. Receipts you actively upload are processed for analysis only and not stored."}
+          </p>
+          <label className="ack" style={{ textAlign: "left", marginBottom: 18 }}>
+            <input type="checkbox" checked={consentChecked} onChange={(e) => setConsentChecked(e.target.checked)} />
+            <span>{de
+              ? "Ich stimme zu, dass Fina meine aggregierten Finanzdaten verarbeitet, um mir zu helfen. Rohdaten werden nie gesendet."
+              : "I agree that Fina processes my aggregated financial data to help me. Raw data is never sent."}</span>
+          </label>
+          <button className="btn btn-primary btn-lg" disabled={!consentChecked} style={{ opacity: consentChecked ? 1 : .5 }} onClick={giveConsent}>
+            {de ? "Zustimmen & Fina starten" : "Agree & start Fina"}
+          </button>
+          <div style={{ marginTop: 14, fontSize: 12, color: "var(--ink-3)" }}>
+            {de ? "Details in der " : "Details in the "}<a href="Datenschutz.html" target="_blank" style={{ color: "var(--brand)" }}>{de ? "Datenschutzerklärung" : "privacy policy"}</a>. {de ? "Widerruf jederzeit in den Einstellungen." : "Revoke anytime in settings."}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate">
