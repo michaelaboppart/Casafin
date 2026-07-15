@@ -385,13 +385,13 @@ footer{padding:40px 0;border-top:1px solid var(--line);color:var(--ink3);font-si
     <span class="ti"><span class="ti-d">✦</span><span data-de="Kein Papierkram. <b>Kein Steuerstress.</b>" data-en="No paperwork. <b>No tax stress.</b>"></span></span>
     <span class="ti"><span class="ti-d">✦</span><span data-de="Bis <b>CHF 2'400</b> Steuerabzüge gefunden." data-en="Up to <b>CHF 2,400</b> deductions found."></span></span>
     <span class="ti"><span class="ti-d">✦</span><span data-de="<b>1-Klick-Export</b> für den Treuhänder." data-en="<b>One-click export</b> for your trustee."></span></span>
-    <span class="ti"><span class="ti-d">✦</span><span data-de="Ø <b>CHF 240</b> Mahngebühren / Jahr gespart." data-en="~<b>CHF 240</b> late fees / year saved."></span></span>
+    <span class="ti"><span class="ti-d">✦</span><span data-de="Bis zu <b>CHF 240</b> Mahngebühren pro Jahr sparen." data-en="Save up to <b>CHF 240</b> in late fees per year."></span></span>
     <span class="ti" aria-hidden="true"><span class="ti-d">✦</span><span data-de="Weniger als dein Netflix-Abo — aber <b>CasaFin zahlt sich aus.</b>" data-en="Less than your Netflix plan — but <b>CasaFin pays for itself.</b>"></span></span>
     <span class="ti" aria-hidden="true"><span class="ti-d">✦</span><span data-de="<b>~47 Stunden / Jahr</b> zurück — alles automatisch." data-en="<b>~47 hours / year</b> back — all automatic."></span></span>
     <span class="ti" aria-hidden="true"><span class="ti-d">✦</span><span data-de="Kein Papierkram. <b>Kein Steuerstress.</b>" data-en="No paperwork. <b>No tax stress.</b>"></span></span>
     <span class="ti" aria-hidden="true"><span class="ti-d">✦</span><span data-de="Bis <b>CHF 2'400</b> Steuerabzüge gefunden." data-en="Up to <b>CHF 2,400</b> deductions found."></span></span>
     <span class="ti" aria-hidden="true"><span class="ti-d">✦</span><span data-de="<b>1-Klick-Export</b> für den Treuhänder." data-en="<b>One-click export</b> for your trustee."></span></span>
-    <span class="ti" aria-hidden="true"><span class="ti-d">✦</span><span data-de="Ø <b>CHF 240</b> Mahngebühren / Jahr gespart." data-en="~<b>CHF 240</b> late fees / year saved."></span></span>
+    <span class="ti" aria-hidden="true"><span class="ti-d">✦</span><span data-de="Bis zu <b>CHF 240</b> Mahngebühren pro Jahr sparen." data-en="Save up to <b>CHF 240</b> in late fees per year."></span></span>
   </div>
 </div>
 
@@ -495,7 +495,7 @@ footer{padding:40px 0;border-top:1px solid var(--line);color:var(--ink3);font-si
   <div class="sec-head">
     <span class="eyebrow" data-de="Fina · KI-Copilot" data-en="Fina · AI copilot"></span>
     <h2 data-de="Stell die Frage. <em>Sie kennt deine Zahlen.</em>" data-en="Ask the question. <em>She knows your numbers.</em>"></h2>
-    <p data-de="Fina ist deine persönliche Finanzberaterin — Antworten auf Basis deiner echten Daten, nicht Durchschnittswerte. Dahinter arbeiten 6 spezialisierte Agenten." data-en="Fina is your personal finance advisor — answers based on your real data, not averages. Behind her, 6 specialised agents do the work."></p>
+    <p data-de="Fina ist dein persönlicher Finanz-Copilot — Antworten auf Basis deiner echten Daten, nicht Durchschnittswerte. Dahinter arbeiten 7 spezialisierte Agenten." data-en="Fina is your personal finance copilot — answers based on your real data, not averages. Behind it, 7 specialised agents do the work."></p>
   </div>
   <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:40px;align-items:center" class="fina-grid">
     <div class="frame fina-chat-dark" style="padding:22px;display:grid;gap:12px">
@@ -544,7 +544,8 @@ footer{padding:40px 0;border-top:1px solid var(--line);color:var(--ink3);font-si
   <div class="pio-bar">
     <span class="k">Pioneer Access</span>
     <div class="barwrap"><div class="track"><i id="pioFill"></i></div></div>
-    <span class="pio-count"><b id="pioTaken">0</b> / 100 <span data-de="Plätze vergeben" data-en="spots taken"></span></span>
+    <span class="pio-count" id="pioCountWrap" style="display:none"><b id="pioTaken">0</b> / 100 <span data-de="Plätze vergeben" data-en="spots taken"></span></span>
+    <span class="pio-count" id="pioPreCount" data-de="Pioneer-Programm offen — limitiert auf 100 Plätze" data-en="Pioneer program open — limited to 100 spots"></span>
     
     <a class="btn btn-gold" href="https://buy.stripe.com/14AfZif5m5536y69fI5Ne0H" data-de="Solo Lifetime — CHF 199" data-en="Solo lifetime — CHF 199"></a>
   </div>
@@ -695,9 +696,20 @@ footer{padding:40px 0;border-top:1px solid var(--line);color:var(--ink3);font-si
 })();
 (function(){
   var fill=document.getElementById('pioFill'),takenEl=document.getElementById('pioTaken'),viewEl=document.getElementById('pioView');
+  var countWrap=document.getElementById('pioCountWrap'),preCount=document.getElementById('pioPreCount');
   if(!fill||!takenEl) return;
-  var taken=0,total=100;
-  function render(){ fill.style.width=(taken/total*100)+'%'; takenEl.textContent=taken; }
+  var taken=0,total=100,threshold=3; // show counter only after >=3 sales
+  function render(){
+    if(taken>=threshold){
+      if(countWrap) countWrap.style.display='';
+      if(preCount) preCount.style.display='none';
+      fill.style.width=(taken/total*100)+'%';
+      takenEl.textContent=taken;
+    } else {
+      if(countWrap) countWrap.style.display='none';
+      if(preCount) preCount.style.display='';
+    }
+  }
   render();
   function viewers(){ /* removed: fake viewer counter */ }
   /* viewers disabled */

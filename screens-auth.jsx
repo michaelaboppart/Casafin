@@ -160,11 +160,16 @@ function AuthScreen({ lang, setLang, theme, setTheme, onUnlocked }) {
 
   async function doRecover() {
     setErr("");
+    // Validate recovery phrase: must be exactly 6 words before anything else
+    const words = recPhrase.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    if (words.length !== 6) {
+      return setErr(lang === "de" ? "Recovery-Phrase ungültig." : "Invalid recovery phrase.");
+    }
     if (pw.length < 8) return setErr(T("sec.tooShort"));
     setBusy(true);
     const ok = await window.Vault.recover(recPhrase, pw);
     setBusy(false);
-    if (!ok) return setErr(lang === "de" ? "Phrase ungültig." : "Invalid phrase.");
+    if (!ok) return setErr(lang === "de" ? "Recovery-Phrase ungültig." : "Invalid recovery phrase.");
     onUnlocked();
   }
 

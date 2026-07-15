@@ -768,7 +768,7 @@ ul { list-style: none; }
 
     /* ---- fina ---- */
     "fina.title": { de: "Fina", en: "Fina" },
-    "fina.role": { de: "Deine persönliche KI-Finanzberaterin", en: "Your personal AI finance advisor" },
+    "fina.role": { de: "Dein persönlicher Finanz-Copilot", en: "Your personal finance copilot" },
     "fina.intro": { de: "Stell mir eine Frage zu deinen echten Daten — Konten, Ausgaben, Steuern, Vorsorge.", en: "Ask me anything about your real data — accounts, spending, taxes, pension." },
     "fina.placeholder": { de: "Frag Fina …", en: "Ask Fina …" },
     "fina.disclaimer": { de: "Informationen basierend auf deinen Kontodaten · Keine Finanzberatung", en: "Information based on your account data · Not financial advice" },
@@ -892,8 +892,9 @@ ul { list-style: none; }
     "subs.yearly": { de: "Jährlich gesamt", en: "Yearly total" },
     "subs.review": { de: "Prüfen", en: "Review" },
     "subs.reviewHint": { de: "selten genutzt / teuer", en: "rarely used / pricey" },
-    "subs.cancel": { de: "Kündigen", en: "Cancel" },
+    "subs.cancel": { de: "Kündigung vorbereiten", en: "Prepare cancellation" },
     "subs.cancelled": { de: "Gekündigt", en: "Cancelled" },
+    "subs.check": { de: "Prüfen", en: "Review" },
 
     /* ---- goals ---- */
     "goals.title": { de: "Spar", en: "Savings" },
@@ -951,6 +952,28 @@ ul { list-style: none; }
     "biz.autoTitle": { de: "Automatische Kontierung", en: "Automatic bookkeeping" },
     "biz.autoDesc": { de: "Jede Buchung wird automatisch dem richtigen Konto im Schweizer KMU-Kontenrahmen zugeordnet — bereit für den Treuhänder.", en: "Every entry is automatically assigned to the right account in the Swiss SME chart of accounts — ready for your trustee." },
     "biz.registered": { de: "MWST-pflichtig", en: "VAT registered" },
+    /* AHV */
+    "ahv.title": { de: "AHV-Abrechnung", en: "AHV contributions" },
+    "ahv.subtitle": { de: "AHV/IV/EO für Einzelfirmen — automatisch berechnet", en: "AHV/IV/EO for sole proprietors — calculated automatically" },
+    "ahv.rate": { de: "Beitragssatz", en: "Contribution rate" },
+    "ahv.estimated": { de: "Geschätzter Jahresbeitrag", en: "Estimated annual contribution" },
+    "ahv.paid": { de: "Bereits bezahlt", en: "Already paid" },
+    "ahv.balance": { de: "Saldo", en: "Balance" },
+    "ahv.balance.due": { de: "noch zu zahlen", en: "still to pay" },
+    "ahv.balance.credit": { de: "Guthaben (zu viel bezahlt)", en: "credit (overpaid)" },
+    "ahv.quarters": { de: "Quartals-Akontobeiträge", en: "Quarterly advances" },
+    "ahv.profit": { de: "Nettoeinkommen (Geschätzung)", en: "Net income (estimated)" },
+    "ahv.admin": { de: "Verwaltungskosten", en: "Administrative costs" },
+    "ahv.next": { de: "Nächste Fälligkeit", en: "Next due" },
+    "ahv.daysLeft": { de: "Tage", en: "days" },
+    "ahv.pay": { de: "Als bezahlt markieren", en: "Mark as paid" },
+    "ahv.export": { de: "SVA-Zusammenfassung", en: "SVA summary" },
+    "ahv.sva": { de: "Ausgleichskasse", en: "Compensation fund" },
+    "ahv.minMax": { de: "Min/Max", en: "Min/Max" },
+    "ahv.adjust": { de: "Schätzung anpassen", en: "Adjust estimate" },
+    "ahv.estimateLabel": { de: "Geschätztes Jahreseinkommen (CHF)", en: "Estimated annual income (CHF)" },
+    "ahv.save": { de: "Speichern", en: "Save" },
+    "ahv.warning": { de: "⚠️ Deine Akontobeiträge basieren auf einer Schätzung. Bei Abweichung kommt es zu Nach- oder Rückerstattung.", en: "⚠️ Your advances are based on an estimate. Deviations lead to surcharge or refund." },
     "biz.kind": { de: "Art", en: "Type" },
   };
 
@@ -1114,8 +1137,52 @@ ul { list-style: none; }
     return out;
   }
 
-  /* ============================================================ seed data */
+  /* ============================================================ seed data
+     All demo dates are generated dynamically relative to today.
+     This ensures the dashboard always shows the current month,
+     transactions look recent, and the chart ends in the current month.
+  ============================================================ */
   function seed() {
+    const now = new Date();
+    const Y = now.getFullYear();
+    const M = now.getMonth(); // 0-indexed
+    const D = now.getDate();
+    const pad = (n) => String(n).padStart(2, "0");
+    const ym = (y, m) => `${y}-${pad(m + 1)}`; // "2026-07"
+    const ymd = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
+    const curMonth = ym(Y, M);
+    const curYear = Y;
+
+    // Helper: date N days ago as YYYY-MM-DD
+    const daysAgo = (n) => {
+      const dt = new Date(now);
+      dt.setDate(dt.getDate() - n);
+      return ymd(dt.getFullYear(), dt.getMonth(), dt.getDate());
+    };
+    // Helper: date N days in the future
+    const daysAhead = (n) => {
+      const dt = new Date(now);
+      dt.setDate(dt.getDate() + n);
+      return ymd(dt.getFullYear(), dt.getMonth(), dt.getDate());
+    };
+    // Helper: date in current month at day D
+    const thisMonthDay = (d) => ymd(Y, M, Math.min(d, 28));
+
+    // AXA bill: due 24 days ago (overdue) — single source of truth
+    const axaDueDate = daysAgo(24);
+
+    // Net worth series: 12 months ending current month, gentle upward trend
+    const baseNW = 248;
+    const nwSeries = [];
+    for (let i = 0; i < 12; i++) {
+      const step = i / 11; // 0..1
+      nwSeries.push(Math.round((baseNW + step * (284.75 - baseNW)) * 100) / 100);
+    }
+
+    // Month names for budget label
+    const monthNamesDe = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+    const monthNamesEn = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
     return {
       profile: { name: "Elena Bianchi", initials: "EB", email: "", plan: "Pioneer", city: "Zürich" },
       accounts: [
@@ -1128,17 +1195,17 @@ ul { list-style: none; }
         { id: "a7", bank: "Neon", label: "Privatkonto", type: "checking", iban: "CH77·····2299", balance: 7400, status: "active", owner: "partner" },
       ],
       transactions: [
-        { id: "t1", accountId: "a1", title: "Coop Zürich", category: "Lebensmittel", date: "2026-05-20", amount: -127.40, icon: "🛒" },
-        { id: "t2", accountId: "a1", title: "Gehalt Test AG", category: "Einkommen", date: "2026-05-18", amount: 8200, icon: "💰" },
-        { id: "t3", accountId: "a1", title: "Miete Mai", category: "Wohnen", date: "2026-05-01", amount: -2400, icon: "🏠" },
-        { id: "t4", accountId: "a1", title: "EWZ Strom", category: "Nebenkosten", date: "2026-05-05", amount: -84.20, icon: "⚡" },
-        { id: "t5", accountId: "a5", title: "SBB Mobile", category: "Transport", date: "2026-05-12", amount: -119.00, icon: "🚆" },
-        { id: "t6", accountId: "a5", title: "Migros", category: "Lebensmittel", date: "2026-05-14", amount: -86.55, icon: "🛒" },
-        { id: "t7", accountId: "a1", title: "Swisscom", category: "Abos", date: "2026-05-08", amount: -69.90, icon: "📱" },
-        { id: "t8", accountId: "a5", title: "Restaurant Kunsthaus", category: "Freizeit", date: "2026-05-16", amount: -142.00, icon: "🍽️" },
+        { id: "t1", accountId: "a1", title: "Coop Zürich", category: "Lebensmittel", date: daysAgo(2), amount: -127.40, icon: "🛒" },
+        { id: "t2", accountId: "a1", title: "Gehalt Test AG", category: "Einkommen", date: daysAgo(5), amount: 8200, icon: "💰" },
+        { id: "t3", accountId: "a1", title: "Miete " + monthNamesDe[M], category: "Wohnen", date: thisMonthDay(1), amount: -2400, icon: "🏠" },
+        { id: "t4", accountId: "a1", title: "EWZ Strom", category: "Nebenkosten", date: thisMonthDay(5), amount: -84.20, icon: "⚡" },
+        { id: "t5", accountId: "a5", title: "SBB Mobile", category: "Transport", date: daysAgo(8), amount: -119.00, icon: "🚆" },
+        { id: "t6", accountId: "a5", title: "Migros", category: "Lebensmittel", date: daysAgo(10), amount: -86.55, icon: "🛒" },
+        { id: "t7", accountId: "a1", title: "Swisscom", category: "Abos", date: thisMonthDay(8), amount: -69.90, icon: "📱" },
+        { id: "t8", accountId: "a5", title: "Restaurant Kunsthaus", category: "Freizeit", date: daysAgo(12), amount: -142.00, icon: "🍽️" },
       ],
       budget: {
-        month: "2026-05",
+        month: curMonth,
         categories: [
           { id: "c1", name: "Wohnen", icon: "🏠", budget: 2700, spent: 2700 },
           { id: "c2", name: "Lebensmittel", icon: "🛒", budget: 1000, spent: 940 },
@@ -1149,12 +1216,12 @@ ul { list-style: none; }
         ],
       },
       documents: [
-        { id: "d1", name: "Steuererklärung 2025 – Kanton Zürich.pdf", kind: "tax", size: "2.4 MB", date: "2026-01-15", status: "done",
-          fields: { vendor: "Kt. Zürich", amount: "—", due: "2026-03-31", category: "Steuern" } },
-        { id: "d2", name: "Krankenkasse AXA – Q2 2026.pdf", kind: "invoice", size: "0.8 MB", date: "2026-04-01", status: "done",
-          fields: { vendor: "AXA", amount: "CHF 420.00", due: "2026-06-21", category: "Versicherung" } },
-        { id: "d3", name: "Swisscard Abrechnung Q2.pdf", kind: "invoice", size: "0.5 MB", date: "2026-04-04", status: "done",
-          fields: { vendor: "Swisscard", amount: "CHF 840.00", due: "2026-05-30", category: "Kreditkarte" } },
+        { id: "d1", name: "Steuererklärung " + (Y - 1) + " – Kanton Zürich.pdf", kind: "tax", size: "2.4 MB", date: ymd(Y, 0, 15), status: "done",
+          fields: { vendor: "Kt. Zürich", amount: "—", due: ymd(Y, 2, 31), category: "Steuern" } },
+        { id: "d2", name: "Krankenkasse AXA – Q" + (Math.floor(M / 3) + 1) + " " + Y + ".pdf", kind: "invoice", size: "0.8 MB", date: daysAgo(30), status: "done",
+          fields: { vendor: "AXA", amount: "CHF 420.00", due: axaDueDate, category: "Versicherung" } },
+        { id: "d3", name: "Swisscard Abrechnung Q" + (Math.floor(M / 3) + 1) + ".pdf", kind: "invoice", size: "0.5 MB", date: daysAgo(35), status: "done",
+          fields: { vendor: "Swisscard", amount: "CHF 840.00", due: daysAgo(14), category: "Kreditkarte" } },
       ],
       agents: [
         { id: "g1", code: "CT", name: "CasaTax", role: "Steuer-Optimierung", roleEn: "Tax optimisation", status: "running", lastRun: "vor 2 Std.", lastRunEn: "2h ago", found: "CHF 1'200 Abzüge", foundEn: "CHF 1,200 deductions" },
@@ -1163,13 +1230,14 @@ ul { list-style: none; }
         { id: "g4", code: "CM", name: "CasaMail", role: "Rechnungs-Scanner", roleEn: "Invoice scanner", status: "running", lastRun: "vor 1 Std.", lastRunEn: "1h ago", found: "2 Rechnungen", foundEn: "2 invoices" },
         { id: "g5", code: "CP", name: "CasaPay", role: "Zahlungs-Automation", roleEn: "Payment automation", status: "paused", lastRun: "gestern", lastRunEn: "yesterday", found: "0 fällig", foundEn: "0 due" },
         { id: "g6", code: "CF", name: "CasaFamily", role: "Vorsorge & Planung", roleEn: "Pension & planning", status: "running", lastRun: "vor 3 Std.", lastRunEn: "3h ago", found: "3a Spielraum", foundEn: "3a headroom" },
+        { id: "g7", code: "CA", name: "CasaAHV", role: "AHV-Abrechnung", roleEn: "AHV contributions", status: "running", lastRun: "vor 2 Std.", lastRunEn: "2h ago", found: "Q2 fällig in 5 Tagen", foundEn: "Q2 due in 5 days" },
       ],
       bills: [
-        { id: "b1", vendor: "AXA Krankenkasse", amount: 420, due: "2026-06-21", status: "open", category: "Versicherung", icon: "🏥" },
-        { id: "b2", vendor: "Serafe (Radio/TV)", amount: 335, due: "2026-07-15", status: "open", category: "Gebühren", icon: "📺" },
-        { id: "b3", vendor: "Zahnarzt Dr. Meier", amount: 240, due: "2026-06-28", status: "open", category: "Gesundheit", icon: "🦷" },
-        { id: "b4", vendor: "Swisscard Visa", amount: 840, due: "2026-05-30", status: "paid", category: "Kreditkarte", icon: "💳" },
-        { id: "b5", vendor: "EWZ Strom", amount: 84.20, due: "2026-06-05", status: "paid", category: "Nebenkosten", icon: "⚡" },
+        { id: "b1", vendor: "AXA Krankenkasse", amount: 420, due: axaDueDate, status: "open", category: "Versicherung", icon: "🏥" },
+        { id: "b2", vendor: "Serafe (Radio/TV)", amount: 335, due: daysAhead(7), status: "open", category: "Gebühren", icon: "📺" },
+        { id: "b3", vendor: "Zahnarzt Dr. Meier", amount: 240, due: daysAhead(3), status: "open", category: "Gesundheit", icon: "🦷" },
+        { id: "b4", vendor: "Swisscard Visa", amount: 840, due: daysAgo(14), status: "paid", category: "Kreditkarte", icon: "💳" },
+        { id: "b5", vendor: "EWZ Strom", amount: 84.20, due: daysAgo(20), status: "paid", category: "Nebenkosten", icon: "⚡" },
       ],
       subscriptions: [
         { id: "s1", name: "Netflix Premium", amount: 24.90, cycle: "monthly", category: "Streaming", icon: "🎬" },
@@ -1186,7 +1254,7 @@ ul { list-style: none; }
         { id: "go3", name: "Neues Auto", target: 15000, saved: 4100, icon: "🚗", monthly: 250 },
       ],
       tax: {
-        year: 2025, canton: "Zürich",
+        year: Y - 1, canton: "Zürich",
         deductions: [
           { id: "tx1", label: "Säule 3a Einzahlung", amount: 7056, status: "found" },
           { id: "tx2", label: "Berufsauslagen", amount: 2400, status: "found" },
@@ -1215,11 +1283,11 @@ ul { list-style: none; }
         ],
       },
       business: {
-        name: "Bianchi Studio · Einzelfirma", year: 2026, vatRate: 8.1, vatRegistered: true,
+        name: "Bianchi Studio · Einzelfirma", year: curYear, vatRate: 8.1, vatRegistered: true,
         revenue: [
-          { id: "br1", label: "Honorar Projekt Helvetia", amount: 18500, date: "2026-05-12" },
-          { id: "br2", label: "Retainer ZKB Digital", amount: 12400, date: "2026-04-30" },
-          { id: "br3", label: "Workshop & Beratung", amount: 3200, date: "2026-05-22" },
+          { id: "br1", label: "Honorar Projekt Helvetia", amount: 18500, date: daysAgo(20) },
+          { id: "br2", label: "Retainer ZKB Digital", amount: 12400, date: daysAgo(45) },
+          { id: "br3", label: "Workshop & Beratung", amount: 3200, date: daysAgo(10) },
         ],
         expenses: [
           { id: "be1", label: "Software & Material", amount: 4200, cat: "Material" },
@@ -1229,7 +1297,24 @@ ul { list-style: none; }
           { id: "be5", label: "Weiterbildung", amount: 900, cat: "Weiterbildung" },
         ],
       },
-      netWorthSeries: [248, 251, 255, 259, 263, 267, 270, 274, 277, 280, 282, 284.75],
+      ahv: {
+        rate: 10.3,           // AHV/IV/EO Beitragssatz 2026 (%)
+        adminRate: 5,         // Verwaltungskostenbeitrag (% der AHV-Beiträge)
+        minContribution: 514, // Mindestbeitrag pro Jahr (CHF)
+        maxContribution: 30900, // Maximalbeitrag pro Jahr (CHF)
+        quarterlyPayments: [
+          { id: "q1", quarter: "Q1", amount: 850, paid: true, paidDate: ymd(Y, 3, 10) },
+          { id: "q2", quarter: "Q2", amount: 850, paid: false, dueDate: ymd(Y, 6, 15) },
+          { id: "q3", quarter: "Q3", amount: 850, paid: false, dueDate: ymd(Y, 9, 15) },
+          { id: "q4", quarter: "Q4", amount: 850, paid: false, dueDate: ymd(Y + 1, 0, 15) },
+        ],
+        estimatedIncome: 56000, // Geschätztes Nettoeinkommen für Akontobeiträge
+        svaCanton: "Zürich",
+        lastAssessment: null,  // Letzte SVA-Jahresabrechnung
+      },
+      netWorthSeries: nwSeries,
+      _seedMonth: curMonth,  // track which month the seed was generated for
+      _seedYear: curYear,
       audit: [],
       settings: { autoLockMin: 5, twoFa: true },
     };
@@ -1238,7 +1323,7 @@ ul { list-style: none; }
   // ensure vaults created before a feature shipped still have its keys
   function migrate(d) {
     const s = seed();
-    ["bills", "subscriptions", "goals", "tax", "family", "emergency", "business"].forEach((k) => { if (d[k] == null) d[k] = s[k]; });
+    ["bills", "subscriptions", "goals", "tax", "family", "emergency", "business", "ahv"].forEach((k) => { if (d[k] == null) d[k] = s[k]; });
     (d.accounts || []).forEach((a) => { if (!a.owner) a.owner = "you"; });
     return d;
   }
@@ -1426,6 +1511,42 @@ ul { list-style: none; }
       bizRevenue: () => data.business.revenue.reduce((s, x) => s + x.amount, 0),
       bizExpenses: () => data.business.expenses.reduce((s, x) => s + x.amount, 0),
       bizProfit: () => Vault.sel.bizRevenue() - Vault.sel.bizExpenses(),
+      /* ----- AHV selectors ----- */
+      ahvProfit: () => Vault.sel.bizRevenue() - Vault.sel.bizExpenses(),
+      ahvRate: () => (window.Vault.data && window.Vault.data.ahv) ? window.Vault.data.ahv.rate : 10.3,
+      ahvAdminRate: () => (window.Vault.data && window.Vault.data.ahv) ? window.Vault.data.ahv.adminRate : 5,
+      ahvEstimatedContribution: () => {
+        const d = window.Vault.data; if (!d || !d.ahv) return 0;
+        const profit = Vault.sel.bizProfit();
+        const base = Math.max(0, profit);
+        const rate = d.ahv.rate / 100;
+        const admin = d.ahv.adminRate / 100;
+        let contrib = base * rate * (1 + admin);
+        return Math.max(d.ahv.minContribution, Math.min(d.ahv.maxContribution, Math.round(contrib)));
+      },
+      ahvPaidThisYear: () => {
+        const d = window.Vault.data; if (!d || !d.ahv) return 0;
+        return (d.ahv.quarterlyPayments || []).filter(q => q.paid).reduce((s, q) => s + q.amount, 0);
+      },
+      ahvTotalQuarters: () => {
+        const d = window.Vault.data; if (!d || !d.ahv) return 0;
+        return (d.ahv.quarterlyPayments || []).reduce((s, q) => s + q.amount, 0);
+      },
+      ahvBalance: () => {
+        // Saldo: geschätzter Beitrag - bereits bezahlt
+        return Vault.sel.ahvEstimatedContribution() - Vault.sel.ahvPaidThisYear();
+      },
+      ahvNextDue: () => {
+        const d = window.Vault.data; if (!d || !d.ahv) return null;
+        const unpaid = (d.ahv.quarterlyPayments || []).filter(q => !q.paid);
+        if (!unpaid.length) return null;
+        return unpaid.sort((a, b) => (a.dueDate || "").localeCompare(b.dueDate || ""))[0];
+      },
+      ahvAdminCost: () => {
+        const d = window.Vault.data; if (!d || !d.ahv) return 0;
+        const contrib = Vault.sel.ahvEstimatedContribution();
+        return Math.round(contrib * d.ahv.adminRate / 100);
+      },
       savingsRate: () => {
         const inc = Vault.sel.income(); if (!inc) return 0;
         return Math.max(0, Math.round((1 - Vault.sel.monthSpent() / inc) * 100));
@@ -1803,7 +1924,7 @@ const NAV = [
   { id: "fina", icon: "fina", badge: "AI", group: "intel" },
   { id: "subs", icon: "loop", group: "intel" },
   { id: "docs", icon: "docs", group: "intel" },
-  { id: "agents", icon: "agents", count: 6, group: "intel" },
+  { id: "agents", icon: "agents", count: 7, group: "intel" },
 ];
 const NAV_GROUPS = [
   { id: "overview", label: "nav.gOverview" },
@@ -2213,7 +2334,7 @@ function Dashboard({ lang, go }) {
     <div className="animate">
       <div className="grid cols-4" style={{ marginBottom: 18 }}>
         <StatTile k={T("dash.netWorth")} icon="chart" v={F.chf(S.netWorth())} sub={"+2.1% " + T("dash.thisMonth")} dir="up" />
-        <StatTile k={T("dash.spendMonth") + " " + (lang === "de" ? "Mai" : "May")} icon="budget" v={F.chf(S.monthSpent())} sub={"+12% " + T("dash.vsLast")} dir="up" />
+        <StatTile k={T("dash.spendMonth") + " " + (lang === "de" ? ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"][new Date().getMonth()] : ["January","February","March","April","May","June","July","August","September","October","November","December"][new Date().getMonth()])} icon="budget" v={F.chf(S.monthSpent())} sub={"+12% " + T("dash.vsLast")} dir="up" />
         <StatTile k={T("dash.deductions")} icon="docs" v={F.chf(2400)} sub={"+" + F.chf(600) + " " + T("dash.newFound")} dir="up" />
         <div className="stat" style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <div style={{ position: "relative", width: 72, height: 72, flexShrink: 0 }}>
@@ -2560,7 +2681,7 @@ function Budget({ lang }) {
       <div className="screen-toolbar">
         <span className="seclabel"><Icon name="budget" size={12} /> {F.chf(spent)} {T("bud.of")} {F.chf(budget)}</span>
         <button className="btn btn-primary" style={{ marginLeft: "auto" }} onClick={() => setTxOpen(true)}><Icon name="plus" size={16} /> {T("bud.addTx")}</button>
-        <div className="seg" style={{ marginLeft: 0 }}><button>‹</button><button className="on">{lang === "de" ? "Mai 2026" : "May 2026"}</button><button>›</button></div>
+        <div className="seg" style={{ marginLeft: 0 }}><button>‹</button><button className="on">{lang === "de" ? ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"][new Date().getMonth()] + " " + new Date().getFullYear() : ["January","February","March","April","May","June","July","August","September","October","November","December"][new Date().getMonth()] + " " + new Date().getFullYear()}</button><button>›</button></div>
       </div>
 
       <div className="grid cols-3" style={{ marginBottom: 18 }}>
@@ -3346,7 +3467,7 @@ function Subscriptions({ lang }) {
                 <div className="sub">{s.category} · {s.cycle === "monthly" ? T("subs.perMonth") : T("subs.perYear")}</div>
               </div>
               <div className="num" style={{ fontWeight: 740, fontSize: 15.5, minWidth: 92, textAlign: "right" }}>{F.chf(s.amount, { dp: 2 })}</div>
-              <button className="btn btn-ghost" style={{ padding: "7px 12px", fontSize: 12.5 }} onClick={() => cancelSub(s.id)}><Icon name="trash" size={14} /> {T("subs.cancel")}</button>
+              <button className="btn btn-ghost" style={{ padding: "7px 12px", fontSize: 12.5 }} onClick={() => s.category === "Versicherung" ? null : cancelSub(s.id)}><Icon name={s.category === "Versicherung" ? "shield" : "trash"} size={14} /> {s.category === "Versicherung" ? T("subs.check") : T("subs.cancel")}</button>
             </div>
           ))}
         </div>
@@ -3434,7 +3555,8 @@ function TaxFolder({ lang }) {
   const found = S.deductionsFound();
   const total = S.deductionsTotal();
   const potential = total - found;
-  const estSaving = Math.round(total * 0.24);
+  const estSavingRaw = Math.round(total * 0.24);
+  const estSaving = Math.round(estSavingRaw / 100) * 100; // round to nearest 100
 
   function exportTax() {
     const lines = [];
@@ -3494,6 +3616,9 @@ function TaxFolder({ lang }) {
           </p>
           <button className="btn btn-gold btn-block" onClick={exportTax}><Icon name="download" size={16} /> {T("tax.export")}</button>
           <div className="seclabel" style={{ marginTop: 14 }}><Icon name="lock" size={12} /> {T("sec.encrypted")}</div>
+          <div style={{ marginTop: 10, fontSize: 11, color: "var(--ink-3)", lineHeight: 1.5 }}>
+            {lang === "de" ? "Schätzung basierend auf Grenzsteuersatz Kt. Zürich." : "Estimate based on marginal tax rate Canton Zurich."}
+          </div>
         </div>
       </div>
     </div>
@@ -3743,6 +3868,46 @@ async function casafinAiExtract(payload) {
     if (!r.ok) return null;
     return await r.json();
   } catch (e) { return null; }
+}
+
+/* ============================================================
+   CasaFin — AHV Adjust (Schätzung anpassen)
+   ============================================================ */
+const { useState: useStateAhv } = React;
+function AhvAdjust({ lang }) {
+  const T = (k) => window.I18N.t(k, lang);
+  const de = lang === "de";
+  const [open, setOpen] = useStateAhv(false);
+  const [val, setVal] = useStateAhv("");
+  const ahv = window.Vault.data?.ahv;
+
+  if (!open) {
+    return (
+      <button className="seclabel" style={{ marginTop: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }} onClick={() => { setVal(String(ahv?.estimatedIncome || "")); setOpen(true); }}>
+        <Icon name="settings" size={12} /> {T("ahv.adjust")}
+      </button>
+    );
+  }
+  return (
+    <div style={{ marginTop: 12, padding: 14, background: "var(--surface2)", borderRadius: 12 }}>
+      <label style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink-2)", display: "block", marginBottom: 8 }}>{T("ahv.estimateLabel")}</label>
+      <div style={{ display: "flex", gap: 8 }}>
+        <input className="input num" type="number" value={val} placeholder="0" onChange={(e) => setVal(e.target.value)} style={{ flex: 1 }} />
+        <button className="btn btn-primary" style={{ fontSize: 13, padding: "10px 16px" }} onClick={() => {
+          const num = Math.max(0, parseFloat(val) || 0);
+          window.Vault.update((data) => {
+            data.ahv.estimatedIncome = num;
+            const contrib = Math.max(data.ahv.minContribution, Math.min(data.ahv.maxContribution, Math.round(num * (data.ahv.rate / 100) * (1 + data.ahv.adminRate / 100))));
+            const quarterly = Math.round(contrib / 4);
+            data.ahv.quarterlyPayments.forEach((q) => { if (!q.paid) q.amount = quarterly; });
+            window.Vault.log("ahv.adjusted", "AHV-Schätzung angepasst: " + num + " CHF");
+          });
+          setOpen(false);
+        }}>{T("ahv.save")}</button>
+        <button className="btn btn-ghost" style={{ fontSize: 13, padding: "10px 14px" }} onClick={() => setOpen(false)}>{T("common.cancel")}</button>
+      </div>
+    </div>
+  );
 }
 
 function Business({ lang }) {
@@ -4069,6 +4234,112 @@ function Business({ lang }) {
               </div>
             )}
           </div>
+
+          {/* ===== AHV Panel ===== */}
+          <div className="card card-pad" style={{ background: "linear-gradient(165deg, var(--brand-soft), transparent)" }}>
+            <div className="card-h">
+              <div className="set-ic" style={{ width: 30, height: 30 }}><Icon name="shield" size={16} /></div>
+              <h3>{T("ahv.title")}</h3>
+            </div>
+            <p style={{ fontSize: 12.5, color: "var(--ink-2)", lineHeight: 1.5, marginBottom: 14 }}>{T("ahv.subtitle")}</p>
+
+            {/* AHV Berechnung */}
+            {(() => {
+              const ahv = d.ahv || {};
+              const estContrib = S.ahvEstimatedContribution();
+              const paid = S.ahvPaidThisYear();
+              const bal = S.ahvBalance();
+              const next = S.ahvNextDue();
+              const adminCost = S.ahvAdminCost();
+              const profit = S.bizProfit();
+
+              return (
+                <>
+                  <div className="vat-row"><span>{T("ahv.profit")}</span><span className="num" style={{ fontWeight: 740, color: "var(--brand)" }}>{F.chf(profit)}</span></div>
+                  <div className="vat-row"><span>{T("ahv.rate")} <small>({ahv.rate || 10.3}% + {ahv.adminRate || 5}% {T("ahv.admin")})</small></span><span className="num">{ahv.rate || 10.3}%</span></div>
+                  <div className="vat-row total"><span>{T("ahv.estimated")}</span><span className="num" style={{ fontWeight: 740, color: "var(--brand)" }}>{F.chf(estContrib)}</span></div>
+                  <div className="vat-row"><span>− {T("ahv.paid")}</span><span className="num">{F.chf(paid)}</span></div>
+                  <div className="vat-row total" style={{ borderTop: "2px solid var(--line)", marginTop: 4, paddingTop: 12 }}>
+                    <span>{T("ahv.balance")}</span>
+                    <span className="num" style={{ fontWeight: 740, color: bal > 0 ? "var(--neg)" : "var(--brand)" }}>
+                      {bal > 0 ? "−" : ""}{F.chf(Math.abs(bal))}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 6 }}>
+                    {bal > 0 ? T("ahv.balance.due") : T("ahv.balance.credit")}
+                  </div>
+
+                  {/* Quartalszahlungen */}
+                  <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
+                    <div className="eyebrow" style={{ marginBottom: 10 }}>{T("ahv.quarters")}</div>
+                    {(ahv.quarterlyPayments || []).map((q) => {
+                      const daysLeft = q.dueDate ? Math.ceil((new Date(q.dueDate) - new Date()) / 86400000) : null;
+                      return (
+                        <div key={q.id} className="bill-row" style={{ marginBottom: 6, alignItems: "center" }}>
+                          <div style={{ flex: 1 }}>
+                            <div className="nm" style={{ fontWeight: q.paid ? 500 : 700 }}>{q.quarter} · {F.chf(q.amount)}</div>
+                            <div className="sub">
+                              {q.paid ? "✓ " + (q.paidDate || "") : q.dueDate + (daysLeft != null && daysLeft >= 0 ? " · " + daysLeft + " " + T("ahv.daysLeft") : "")}
+                            </div>
+                          </div>
+                          {q.paid ? (
+                            <span className="chip" style={{ background: "var(--brand-soft)", color: "var(--brand-ink)", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 999 }}>✓</span>
+                          ) : (
+                            <button className="btn btn-ghost" style={{ fontSize: 11.5, padding: "6px 12px" }} onClick={() => {
+                              window.Vault.update((data) => {
+                                const qp = data.ahv.quarterlyPayments.find((x) => x.id === q.id);
+                                if (qp) { qp.paid = true; qp.paidDate = new Date().toISOString().slice(0, 10); }
+                                window.Vault.log("ahv.paid", "AHV " + q.quarter + " bezahlt · " + q.amount + " CHF");
+                              });
+                            }}>{T("ahv.pay")}</button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Nächste Fälligkeit */}
+                  {next && (
+                    <div style={{ marginTop: 12, padding: "10px 14px", background: "rgba(193,134,42,.08)", borderRadius: 12, fontSize: 12.5, color: "var(--gold)", fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
+                      <Icon name="bell" size={14} /> {T("ahv.next")}: {next.quarter} · {next.dueDate} · {F.chf(next.amount)}
+                    </div>
+                  )}
+
+                  {/* Schätzung anpassen */}
+                  <AhvAdjust lang={lang} />
+
+                  {/* Warning */}
+                  <div style={{ marginTop: 10, fontSize: 11, color: "var(--ink-3)", lineHeight: 1.5, padding: "8px 12px", background: "rgba(193,134,42,.05)", borderRadius: 10 }}>
+                    {T("ahv.warning")}
+                  </div>
+
+                  {/* Export */}
+                  <button className="btn btn-ghost" style={{ width: "100%", marginTop: 12, fontSize: 13 }} onClick={() => {
+                    const L = [];
+                    L.push("CasaFin — AHV-Zusammenfassung " + biz.year);
+                    L.push(biz.name);
+                    L.push(T("ahv.sva") + ": " + (ahv.svaCanton || "—"));
+                    L.push("");
+                    L.push(T("ahv.profit") + ": " + F.chf(profit));
+                    L.push(T("ahv.rate") + ": " + (ahv.rate || 10.3) + "% + " + (ahv.adminRate || 5) + "% " + T("ahv.admin"));
+                    L.push(T("ahv.estimated") + ": " + F.chf(estContrib));
+                    L.push(T("ahv.paid") + ": " + F.chf(paid));
+                    L.push(T("ahv.balance") + ": " + (bal > 0 ? "−" : "") + F.chf(Math.abs(bal)) + " " + (bal > 0 ? T("ahv.balance.due") : T("ahv.balance.credit")));
+                    L.push("");
+                    L.push(T("ahv.quarters") + ":");
+                    (ahv.quarterlyPayments || []).forEach((q) => {
+                      L.push("  " + q.quarter + ": " + F.chf(q.amount) + " — " + (q.paid ? "bezahlt " + q.paidDate : "offen, fällig " + (q.dueDate || "—")));
+                    });
+                    const blob = new Blob([L.join("\n")], { type: "text/plain;charset=utf-8" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a"); a.href = url; a.download = "CasaFin-AHV-" + biz.year + ".txt"; a.click();
+                    URL.revokeObjectURL(url);
+                    window.Vault.logPersist("ahv.exported", "AHV-Zusammenfassung " + biz.year);
+                  }}><Icon name="download" size={14} /> {T("ahv.export")}</button>
+                </>
+              );
+            })()}
+          </div>
         </div>
       </div>
 
@@ -4206,7 +4477,7 @@ function App() {
     business: { eyebrow: "Einzelfirma", title: T("biz.head"), em: T("biz.headEm"), sub: T("biz.sub") },
     tax: { eyebrow: "CasaTax", title: T("tax.title"), em: T("tax.titleEm"), sub: T("tax.sub") },
     family: { eyebrow: "CasaFamily", title: T("fam.title"), em: T("fam.titleEm"), sub: T("fam.sub") },
-    budget: { eyebrow: lang === "de" ? "Mai 2026" : "May 2026", title: T("bud.title"), em: T("bud.titleEm") },
+    budget: { eyebrow: lang === "de" ? ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"][new Date().getMonth()] + " " + new Date().getFullYear() : ["January","February","March","April","May","June","July","August","September","October","November","December"][new Date().getMonth()] + " " + new Date().getFullYear(), title: T("bud.title"), em: T("bud.titleEm") },
     fina: { eyebrow: "AI Copilot", title: "Fina", sub: T("fina.role") },
     subs: { eyebrow: "CasaBudget", title: T("subs.title"), em: T("subs.titleEm"), sub: T("subs.sub") },
     docs: { eyebrow: "OCR · AES-256", title: T("docs.title"), em: T("docs.titleEm") },

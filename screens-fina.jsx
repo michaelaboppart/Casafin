@@ -58,6 +58,12 @@ function Fina({ lang }) {
       lines.push(`Jahresertrag: ${F.chf(S.bizRevenue())}`);
       lines.push(`Jahresaufwand: ${F.chf(S.bizExpenses())}`);
     }
+    if (d.ahv) {
+      lines.push(`AHV-Beitragssatz: ${d.ahv.rate || 10.3}%`);
+      lines.push(`AHV geschätzter Beitrag: ${F.chf(S.ahvEstimatedContribution())}`);
+      lines.push(`AHV bereits bezahlt: ${F.chf(S.ahvPaidThisYear())}`);
+      lines.push(`AHV Saldo: ${F.chf(S.ahvBalance())}`);
+    }
     return lines.join("\n");
   }
 
@@ -229,12 +235,18 @@ function Fina({ lang }) {
       : `✅ Booking suggestion transferred. Please review and confirm in the Business section.` }]);
   }
 
+  // AXA bill — read from vault (single source of truth)
+  const axaBill = (window.Vault.data?.bills || []).find(b => b.vendor && b.vendor.includes("AXA"));
+  const axaDays = axaBill ? Math.round((new Date(axaBill.due) - new Date()) / 86400000) : null;
+  const axaLabel = axaBill ? (axaDays < 0 ? (de ? Math.abs(axaDays) + " T. überfällig" : Math.abs(axaDays) + "d overdue") : (de ? "in " + axaDays + " Tagen" : "in " + axaDays + " days")) : "";
+  const axaAmt = axaBill ? "CHF " + axaBill.amount : "CHF 420";
+
   const actions = de
-    ? [{ icon: "💳", t: "Krankenkasse AXA fällig", d: "CHF 420 in 3 Tagen — automatische Zahlung einrichten.", v: "CHF 420", u: true },
-       { icon: "📋", t: "Steuerabzüge optimieren", d: "CHF 1'200 zusätzliche Abzüge möglich — Kt. Zürich 2025.", v: "+CHF 1'200", u: false },
+    ? [{ icon: "💳", t: "Krankenkasse AXA " + (axaDays < 0 ? "überfällig" : "fällig"), d: axaAmt + " " + axaLabel + " — automatische Zahlung einrichten.", v: axaAmt, u: true },
+       { icon: "📋", t: "Steuerabzüge optimieren", d: "CHF 1'200 zusätzliche Abzüge möglich — Kt. Zürich " + (new Date().getFullYear() - 1) + ".", v: "+CHF 1'200", u: false },
        { icon: "💡", t: "Freizeit über Budget", d: "CHF 112 über dem Monatsbudget — Tendenz steigend.", v: "−CHF 112", u: false }]
-    : [{ icon: "💳", t: "Health insurance AXA due", d: "CHF 420 in 3 days — set up automatic payment.", v: "CHF 420", u: true },
-       { icon: "📋", t: "Optimise tax deductions", d: "CHF 1,200 additional deductions possible — ZH 2025.", v: "+CHF 1,200", u: false },
+    : [{ icon: "💳", t: "Health insurance AXA " + (axaDays < 0 ? "overdue" : "due"), d: axaAmt + " " + axaLabel + " — set up automatic payment.", v: axaAmt, u: true },
+       { icon: "📋", t: "Optimise tax deductions", d: "CHF 1,200 additional deductions possible — ZH " + (new Date().getFullYear() - 1) + ".", v: "+CHF 1,200", u: false },
        { icon: "💡", t: "Leisure over budget", d: "CHF 112 above monthly budget — trending up.", v: "−CHF 112", u: false }];
 
   // ── Consent-Gate: vor erster Fina-Nutzung (revDSG) ──

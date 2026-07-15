@@ -152,7 +152,7 @@
 
     /* ---- fina ---- */
     "fina.title": { de: "Fina", en: "Fina" },
-    "fina.role": { de: "Deine persönliche KI-Finanzberaterin", en: "Your personal AI finance advisor" },
+    "fina.role": { de: "Dein persönlicher Finanz-Copilot", en: "Your personal finance copilot" },
     "fina.intro": { de: "Stell mir eine Frage zu deinen echten Daten — Konten, Ausgaben, Steuern, Vorsorge.", en: "Ask me anything about your real data — accounts, spending, taxes, pension." },
     "fina.placeholder": { de: "Frag Fina …", en: "Ask Fina …" },
     "fina.disclaimer": { de: "Informationen basierend auf deinen Kontodaten · Keine Finanzberatung", en: "Information based on your account data · Not financial advice" },
